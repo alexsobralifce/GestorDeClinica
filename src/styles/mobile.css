@@ -1,0 +1,930 @@
+/* ============================================ */
+/* MOBILE DESIGN SYSTEM - "SAÚDE HUMANIZADA CONTEMPORÂNEA" */
+/* Sistema Completo de Design Mobile-First */
+/* ============================================ */
+
+/* MOBILE BREAKPOINTS E VARIÁVEIS */
+@media (max-width: 768px) {
+  :root {
+    /* Tipografia Mobile Reduzida */
+    --text-display-mobile: 2rem;      /* 32px - reduzido de 48px */
+    --text-h1-mobile: 1.5rem;         /* 24px - reduzido de 39px */
+    --text-h2-mobile: 1.25rem;        /* 20px - reduzido de 31px */
+    --text-h3-mobile: 1.125rem;       /* 18px - reduzido de 25px */
+    
+    /* Touch Targets */
+    --touch-target-min: 48px;         /* Mínimo WCAG AAA */
+    --touch-target-comfortable: 56px; /* Confortável */
+    
+    /* Safe Areas (iOS) */
+    --safe-area-top: env(safe-area-inset-top);
+    --safe-area-bottom: env(safe-area-inset-bottom);
+    --safe-area-left: env(safe-area-inset-left);
+    --safe-area-right: env(safe-area-inset-right);
+  }
+  
+  /* ========================================== */
+  /* AJUSTES DE TIPOGRAFIA MOBILE */
+  /* ========================================== */
+  
+  h1 {
+    font-size: var(--text-h1-mobile) !important;
+  }
+  
+  h2 {
+    font-size: var(--text-h2-mobile) !important;
+  }
+  
+  h3 {
+    font-size: var(--text-h3-mobile) !important;
+  }
+  
+  .heading-primary {
+    font-size: var(--text-h1-mobile) !important;
+  }
+  
+  .heading-secondary {
+    font-size: var(--text-h2-mobile) !important;
+  }
+  
+  /* ========================================== */
+  /* LAYOUT MOBILE */
+  /* ========================================== */
+  
+  .page-container {
+    padding: 16px !important; /* Reduzido de 24px */
+  }
+  
+  .page-header {
+    padding: 16px !important; /* Reduzido de 24px 32px */
+    min-height: auto !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+  
+  .card {
+    border-radius: 12px !important; /* Reduzido de 16px */
+  }
+  
+  .card-content {
+    padding: 16px !important; /* Reduzido de 24px */
+  }
+  
+  .card-content-lg {
+    padding: 20px !important; /* Reduzido de 32px */
+  }
+  
+  .card-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  /* ========================================== */
+  /* BOTÕES MOBILE - TOUCH FRIENDLY */
+  /* ========================================== */
+  
+  .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-danger {
+    min-height: 48px !important; /* Touch target mínimo */
+    padding: 12px 20px !important;
+    font-size: 16px !important; /* Maior para legibilidade */
+  }
+  
+  .btn-premium {
+    min-height: 48px !important;
+    padding: 12px 24px !important;
+    font-size: 16px !important;
+  }
+  
+  .btn-sm {
+    min-height: 40px !important; /* Maior que desktop */
+    padding: 8px 16px !important;
+    font-size: 14px !important;
+  }
+  
+  /* Botão full-width mobile */
+  .btn-mobile-full {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  
+  /* ========================================== */
+  /* INPUTS MOBILE - EVITA ZOOM NO iOS */
+  /* ========================================== */
+  
+  .input-field {
+    min-height: 48px !important; /* Touch friendly */
+    font-size: 16px !important; /* CRÍTICO: evita zoom no iOS */
+    padding: 12px 16px !important;
+  }
+  
+  textarea.input-field {
+    min-height: 96px !important;
+    font-size: 16px !important;
+  }
+  
+  select.input-field {
+    font-size: 16px !important;
+  }
+  
+  /* ========================================== */
+  /* FORM MOBILE */
+  /* ========================================== */
+  
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  
+  .form-grid .field-span-2 {
+    grid-column: span 1 !important;
+  }
+  
+  .form-container {
+    padding: 16px !important;
+  }
+  
+  .field-label {
+    font-size: 14px !important;
+    margin-bottom: 8px !important;
+  }
+}
+
+/* ========================================== */
+/* COMPONENTES MOBILE - SEMPRE VISÍVEIS */
+/* ========================================== */
+
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(56px + env(safe-area-inset-bottom));
+  background: white;
+  border-top: 1px solid #e8e5df;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  padding-top: 8px;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -2px 8px rgba(42, 41, 38, 0.08);
+  z-index: 1000;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 48px;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+}
+
+.bottom-nav-item svg {
+  width: 24px;
+  height: 24px;
+}
+
+.bottom-nav-item-label {
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1;
+  font-family: var(--font-body);
+}
+
+.bottom-nav-item.active {
+  color: #4a7c65;
+}
+
+.bottom-nav-item.active .bottom-nav-item-label {
+  font-weight: 600;
+}
+
+.bottom-nav-item:not(.active) {
+  color: #7a7369;
+}
+
+.bottom-nav-badge {
+  position: absolute;
+  top: 2px;
+  right: calc(50% - 16px);
+  width: 8px;
+  height: 8px;
+  background: #e85d3f;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+/* Top App Bar Mobile */
+.mobile-app-bar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(56px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+  background: white;
+  border-bottom: 1px solid #e8e5df;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 4px;
+  padding-right: 4px;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(42, 41, 38, 0.08);
+}
+
+.mobile-app-bar-left,
+.mobile-app-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 48px;
+}
+
+.mobile-app-bar-center {
+  flex: 1;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2b2926;
+  font-family: var(--font-heading);
+  padding: 0 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-app-bar-icon-btn {
+  min-width: 48px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24px;
+  transition: background 0.2s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.mobile-app-bar-icon-btn:active {
+  background: #f5f3ef;
+}
+
+.mobile-app-bar-icon-btn svg {
+  width: 24px;
+  height: 24px;
+  color: #2b2926;
+}
+
+/* ========================================== */
+/* CARDS MOBILE */
+/* ========================================== */
+
+/* List Card Mobile */
+.mobile-list-card {
+  display: flex;
+  align-items: center;
+  min-height: 72px;
+  padding: 12px 16px;
+  background: white;
+  border-bottom: 1px solid #e8e5df;
+  gap: 12px;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.mobile-list-card:active {
+  background: #faf9f7;
+}
+
+.mobile-list-card-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #f5f3ef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #4a7c65;
+  font-family: var(--font-heading);
+}
+
+.mobile-list-card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobile-list-card-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #2b2926;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-body);
+}
+
+.mobile-list-card-subtitle {
+  font-size: 14px;
+  color: #7a7369;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-body);
+}
+
+.mobile-list-card-trailing {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ========================================== */
+/* FLOATING ACTION BUTTON (FAB) */
+/* ========================================== */
+
+.fab {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom)); /* Acima do bottom nav */
+  right: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4a7c65 0%, #3d6653 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(74, 124, 101, 0.3);
+  z-index: 999;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  border: none;
+  cursor: pointer;
+}
+
+.fab:active {
+  transform: scale(0.95);
+}
+
+.fab svg {
+  width: 24px;
+  height: 24px;
+}
+
+.fab-mini {
+  width: 48px;
+  height: 48px;
+}
+
+.fab-extended {
+  width: auto;
+  padding: 0 20px;
+  border-radius: 28px;
+  gap: 8px;
+}
+
+.fab-extended-label {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-heading);
+}
+
+/* ========================================== */
+/* BOTTOM SHEET */
+/* ========================================== */
+
+.bottom-sheet-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+}
+
+.bottom-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 90vh;
+  background: white;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 24px rgba(42, 41, 38, 0.15);
+  z-index: 2001;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-sheet-handle {
+  width: 32px;
+  height: 4px;
+  background: #d4cfc5;
+  border-radius: 2px;
+  margin: 12px auto 8px;
+  flex-shrink: 0;
+}
+
+.bottom-sheet-header {
+  padding: 12px 16px 16px;
+  border-bottom: 1px solid #e8e5df;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.bottom-sheet-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2b2926;
+  font-family: var(--font-heading);
+}
+
+.bottom-sheet-close {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+  margin: -8px -8px -8px 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.bottom-sheet-close:active {
+  background: #f5f3ef;
+}
+
+.bottom-sheet-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.bottom-sheet-footer {
+  padding: 16px;
+  border-top: 1px solid #e8e5df;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ========================================== */
+/* TOAST / SNACKBAR MOBILE */
+/* ========================================== */
+
+.toast-mobile {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom)); /* Acima do bottom nav */
+  left: 16px;
+  right: 16px;
+  min-height: 48px;
+  background: #2b2926;
+  color: white;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(42, 41, 38, 0.3);
+  z-index: 3000;
+}
+
+.toast-mobile-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.toast-mobile-message {
+  flex: 1;
+  font-size: 14px;
+  line-height: 20px;
+  font-family: var(--font-body);
+}
+
+.toast-mobile-action {
+  color: #8fb5a4;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: var(--font-heading);
+}
+
+/* ========================================== */
+/* SEARCH BAR MOBILE */
+/* ========================================== */
+
+.search-bar-mobile {
+  height: 44px;
+  background: #f5f3ef;
+  border: 1px solid #e8e5df;
+  border-radius: 22px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 16px;
+  transition: all 0.2s;
+}
+
+.search-bar-mobile.focused {
+  background: white;
+  border-color: #4a7c65;
+  box-shadow: 0 0 0 3px rgba(74, 124, 101, 0.1);
+}
+
+.search-bar-mobile-icon {
+  width: 20px;
+  height: 20px;
+  color: #7a7369;
+  flex-shrink: 0;
+}
+
+.search-bar-mobile-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  color: #2b2926;
+  outline: none;
+  font-family: var(--font-body);
+}
+
+.search-bar-mobile-input::placeholder {
+  color: #a8a199;
+}
+
+.search-bar-mobile-clear {
+  width: 20px;
+  height: 20px;
+  color: #7a7369;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* ========================================== */
+/* TABS MOBILE */
+/* ========================================== */
+
+.tabs-mobile {
+  display: flex;
+  height: 48px;
+  background: white;
+  border-bottom: 2px solid #e8e5df;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs-mobile::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-mobile {
+  flex: 1;
+  min-width: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #7a7369;
+  position: relative;
+  white-space: nowrap;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-heading);
+}
+
+.tab-mobile.active {
+  color: #4a7c65;
+  font-weight: 600;
+}
+
+.tab-mobile.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #4a7c65;
+}
+
+/* ========================================== */
+/* DATE PICKER HORIZONTAL SCROLL */
+/* ========================================== */
+
+.date-picker-scroll {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  background: white;
+}
+
+.date-picker-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.date-picker-item {
+  flex-shrink: 0;
+  width: 56px;
+  height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: white;
+  border: 1px solid #e8e5df;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  scroll-snap-align: center;
+}
+
+.date-picker-item.selected {
+  background: #4a7c65;
+  border-color: #4a7c65;
+  color: white;
+}
+
+.date-picker-item-day {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--font-heading);
+}
+
+.date-picker-item-date {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  font-family: var(--font-heading);
+}
+
+.date-picker-item-dots {
+  display: flex;
+  gap: 3px;
+  height: 3px;
+}
+
+.date-picker-item-dot {
+  width: 3px;
+  height: 3px;
+  background: currentColor;
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+/* ========================================== */
+/* STEPPER MOBILE */
+/* ========================================== */
+
+.stepper-mobile {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: white;
+  border-bottom: 1px solid #e8e5df;
+  gap: 8px;
+}
+
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  gap: 4px;
+}
+
+.stepper-step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  background: #e8e5df;
+  color: #7a7369;
+  transition: all 0.2s;
+  font-family: var(--font-heading);
+}
+
+.stepper-step.active .stepper-step-number {
+  background: #4a7c65;
+  color: white;
+}
+
+.stepper-step.completed .stepper-step-number {
+  background: #4a7c65;
+  color: white;
+}
+
+.stepper-step-label {
+  font-size: 11px;
+  color: #7a7369;
+  font-weight: 400;
+  text-align: center;
+  font-family: var(--font-body);
+}
+
+.stepper-step.active .stepper-step-label {
+  color: #4a7c65;
+  font-weight: 600;
+}
+
+.stepper-connector {
+  flex: 1;
+  height: 2px;
+  background: #e8e5df;
+  margin: 0 4px;
+  margin-bottom: 20px;
+}
+
+.stepper-connector.active {
+  background: #4a7c65;
+}
+
+/* ========================================== */
+/* UTILITÁRIOS MOBILE */
+/* ========================================== */
+
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+  
+  .show-mobile {
+    display: block !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none !important;
+  }
+  
+  .show-desktop {
+    display: block !important;
+  }
+  
+  /* Esconder componentes mobile no desktop */
+  .bottom-nav,
+  .mobile-app-bar,
+  .fab {
+    display: none !important;
+  }
+}
+
+/* Safe area padding helpers */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+.mb-nav {
+  margin-bottom: calc(56px + env(safe-area-inset-bottom));
+}
+
+.pb-nav {
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
+}
+
+/* Touch feedback */
+.touch-feedback:active {
+  opacity: 0.7;
+  transform: scale(0.97);
+}
+
+/* Ripple effect placeholder (pode ser implementado com JS) */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ========================================== */
+/* ANIMATIONS */
+/* ========================================== */
+
+/* Shimmer effect para skeleton loading */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Pulse animation para estados de loading */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Spin animation (para spinners) */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Bounce animation (para feedback de sucesso) */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 0.5s ease-in-out;
+}
