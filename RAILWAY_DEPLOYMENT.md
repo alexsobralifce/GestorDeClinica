@@ -80,45 +80,42 @@ Railway should use the `start` script from root `package.json`:
 npm start
 ```
 
-## Step 5: Run Database Migrations
+## Step 5: Database Migrations (Automatic)
 
-After the first deployment succeeds:
+**Good news!** Migrations are configured to run automatically on every deployment.
 
-### Option A: Using Railway CLI (Recommended)
-```bash
-# Install Railway CLI
-npm i -g @railway/cli
-
-# Login to Railway
-railway login
-
-# Link to your project
-railway link
-
-# Run migrations
-railway run npm run migrate --service backend
-
-# Verify database connection
-railway run npm run test:db --service backend
-```
-
-### Option B: Using Railway Dashboard
-1. Go to your backend service
-2. Click **"Deployments"**
-3. Find the most recent successful deployment
-4. Click the **three dots** → **"View Logs"**
-5. Check if migrations ran automatically (if you add it to start script)
-
-### Option C: Add Migration to Start Script
-Update `backend/package.json`:
+The `start` script in `backend/package.json` includes:
 ```json
-{
-  "scripts": {
-    "start": "npm run migrate && tsx src/index.ts"
-  }
-}
+"start": "npm run migrate && tsx src/index.ts"
 ```
-This will run migrations automatically on each deployment.
+
+This means:
+- ✅ Migrations run automatically before the server starts
+- ✅ No manual intervention needed
+- ✅ Database always up-to-date with latest schema
+- ✅ Default admin user created automatically
+
+### Verify Migrations in Logs
+
+After deployment:
+1. Go to backend service → **Deployments**
+2. Click latest deployment → **View Logs**
+3. Look for migration output:
+   ```
+   Starting migration...
+   ✅ Migration 001_initial_schema.sql executed successfully
+   ✅ Migration 002_seed_data.sql executed successfully
+   ...
+   All migrations completed successfully.
+   ✅ Server running on http://localhost:3001
+   ```
+
+### Manual Migration (if needed)
+
+If you need to run migrations manually:
+```bash
+railway run npm run migrate --service backend
+```
 
 ## Step 6: Verify Deployment
 
