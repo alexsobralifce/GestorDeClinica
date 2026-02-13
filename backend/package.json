@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "node --import tsx start.mjs",
-    "start": "node dist/index.js",
+    "start": "tsx src/index.ts",
     "build": "tsc",
     "migrate": "tsx src/db/migrate.ts",
     "test:db": "tsx src/db/test-connection.ts",
