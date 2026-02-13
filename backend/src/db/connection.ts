@@ -51,9 +51,21 @@ if (connectionString.includes('${')) {
 const maskedUrl = connectionString.replace(/:[^:@]+@/, ':****@');
 console.log(`🔌 Connecting to database: ${maskedUrl}`);
 
+// Determine if SSL should be used
+// Railway and most production DBs require SSL
+// Localhost usually doesn't
+const isProduction = process.env.NODE_ENV === 'production';
+const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+
+const sslConfig = (isProduction && !isLocalhost)
+  ? { rejectUnauthorized: false }
+  : undefined;
+
+console.log(`🔌 SSL Enabled: ${!!sslConfig}`);
+
 const pool = new Pool({
   connectionString,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+  ssl: sslConfig,
   // Connection pool settings
   max: 20, // Maximum number of clients in pool
   idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
