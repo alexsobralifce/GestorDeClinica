@@ -41,8 +41,12 @@ export async function seedDefaultAdmin() {
   }
 }
 
-// Run if called directly
-if (require.main === module) {
+// Run if called directly (ESM compatible)
+import { fileURLToPath } from 'url';
+
+const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
+
+if (isMainModule) {
   seedDefaultAdmin()
     .then(() => {
       console.log('Seeding complete');
