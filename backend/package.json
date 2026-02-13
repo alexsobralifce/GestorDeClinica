@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "node --import tsx start.mjs",
-    "start": "npm run migrate && tsx src/index.ts",
+    "start": "echo 'Running migrations...' && npm run migrate && echo 'Migrations complete' && tsx src/index.ts",
     "build": "tsc",
     "migrate": "tsx src/db/migrate.ts",
     "test:db": "tsx src/db/test-connection.ts",
