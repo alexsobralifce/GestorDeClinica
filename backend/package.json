@@ -10,6 +10,7 @@
     "build": "tsc",
     "migrate": "tsx src/db/migrate.ts",
     "test:db": "tsx src/db/test-connection.ts",
+    "seed": "tsx src/db/seeds/default-admin.ts",
     "build:prod": "cd ../frontend && npm install --include=dev && npm run build && cd ../backend && npm install --include=dev && tsc"
   },
   "dependencies": {

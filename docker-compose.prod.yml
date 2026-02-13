@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gestor-clinica-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres123}
+      POSTGRES_DB: ${DB_NAME:-gestor_clinica}
+      # Performance tuning for production
+      POSTGRES_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS:-100}
+      POSTGRES_SHARED_BUFFERS: ${DB_SHARED_BUFFERS:-256MB}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Backup directory
+      - ./backups:/backups
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-gestor_clinica}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - gestor-clinica-network
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 512M
+    # Security: Run as non-root user
+    user: postgres
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data:
+    driver: local
+    # For production, consider using named volumes or external volumes
+    # driver_opts:
+    #   type: none
+    #   device: /mnt/postgres-data
+    #   o: bind
+
+networks:
+  gestor-clinica-network:
+    driver: bridge
