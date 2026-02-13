@@ -39,6 +39,14 @@ if (process.env.NODE_ENV === 'production') {
 
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres123@localhost:5432/gestor_clinica';
 
+// Check for unreplaced placeholders
+if (connectionString.includes('${')) {
+  console.error('❌ Error: DATABASE_URL contains unreplaced placeholders!');
+  console.error('   Current value:', connectionString);
+  console.error('   Please verify your environment variables.');
+  process.exit(1);
+}
+
 // Log connection info (hide password for security)
 const maskedUrl = connectionString.replace(/:[^:@]+@/, ':****@');
 console.log(`🔌 Connecting to database: ${maskedUrl}`);
