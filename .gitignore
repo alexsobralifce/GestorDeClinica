@@ -1,0 +1,42 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Backend
+backend/.env
+backend/node_modules/
+backend/dist/
+
+# Frontend
+frontend/.env
+frontend/.env.local
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Database
+postgres_data/
+pgadmin_data/
+
+# Old structure (to be removed)
+server/
+src/
