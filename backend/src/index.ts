@@ -20,8 +20,22 @@ dotenv.config();
 const app = new Hono();
 
 // CORS middleware
+// CORS middleware
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://gestordeclinica-production.up.railway.app', // Frontend em produção
+  ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
+];
+
 app.use('/*', cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'],
+  origin: (origin) => {
+    if (!origin) return allowedOrigins[0]; // Allow requests with no origin (like mobile apps or curl)
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      return origin;
+    }
+    return allowedOrigins[0]; // Fallback
+  },
   credentials: true,
 }));
 

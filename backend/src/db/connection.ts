@@ -37,7 +37,7 @@ if (process.env.NODE_ENV === 'production') {
   validateEnvironment();
 }
 
-const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres123@localhost:5432/gestor_clinica';
+let connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres123@localhost:5432/gestor_clinica';
 
 // Check for unreplaced placeholders
 if (connectionString.includes('${')) {
@@ -61,12 +61,15 @@ const sslConfig = (isProduction || !isLocalhost)
   ? { rejectUnauthorized: false }
   : undefined;
 
-console.log(`🔌 SSL Enabled: ${!!sslConfig}`);
-
+// Auto-fix for legacy/incorrect Railway hostname
 if (connectionString.includes('host.railway.internal')) {
-  console.warn('⚠️  WARNING: "host.railway.internal" is often invalid in newer Railway environments.');
-  console.warn('   If you get ENOTFOUND, update DATABASE_URL to use the internal Service URL (e.g., postgres.railway.internal) or the Public URL.');
+  console.warn('⚠️  DETECTED INVALID HOSTNAME: "host.railway.internal"');
+  console.warn('🔄 Attempting to auto-fix by switching to "postgres.railway.internal"...');
+  connectionString = connectionString.replace('host.railway.internal', 'postgres.railway.internal');
 }
+
+console.log(`🔌 SSL Enabled: ${!!sslConfig}`);
+console.log(`🔌 Final Connection String: ${connectionString.replace(/:[^:@]+@/, ':****@')}`);
 
 const pool = new Pool({
   connectionString,
