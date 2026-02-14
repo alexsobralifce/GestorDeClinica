@@ -7,7 +7,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function migrate() {
-  const client = await pool.connect();
+  let client;
+  try {
+    client = await pool.connect();
+  } catch (err: any) {
+    console.error('❌ Failed to connect to the database used for migrations.');
+    console.error('   Error:', err.message);
+    if (err.code === 'ENOTFOUND') {
+      console.error('   👉 Check your DATABASE_URL. The hostname cannot be resolved.');
+      console.error('   If you are using "host.railway.internal", replace it with the internal service URL (e.g., postgres.railway.internal) or the public URL.');
+    }
+    process.exit(1);
+  }
 
   try {
     console.log('Starting migration...');

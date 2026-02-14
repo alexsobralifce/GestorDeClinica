@@ -57,11 +57,16 @@ console.log(`🔌 Connecting to database: ${maskedUrl}`);
 const isProduction = process.env.NODE_ENV === 'production';
 const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
 
-const sslConfig = (isProduction && !isLocalhost)
+const sslConfig = (isProduction || !isLocalhost)
   ? { rejectUnauthorized: false }
   : undefined;
 
 console.log(`🔌 SSL Enabled: ${!!sslConfig}`);
+
+if (connectionString.includes('host.railway.internal')) {
+  console.warn('⚠️  WARNING: "host.railway.internal" is often invalid in newer Railway environments.');
+  console.warn('   If you get ENOTFOUND, update DATABASE_URL to use the internal Service URL (e.g., postgres.railway.internal) or the Public URL.');
+}
 
 const pool = new Pool({
   connectionString,
