@@ -20,7 +20,8 @@ const pool = new pg.Pool({
 
 async function checkDb() {
   try {
-    console.log(`🔌 Connecting to: ${connectionString.replace(/:[^:@]+@/, ':****@')}`);
+    const connStr = connectionString as string;
+    console.log(`🔌 Connecting to: ${connStr.replace(/:[^:@]+@/, ':****@')}`);
     const client = await pool.connect();
     console.log('✅ Connection established successfully!');
 
