@@ -787,9 +787,9 @@ html.dark {
 }
 
 /* --- Status Colors in Dark Context --- */
-.dark .border-2.border-\[\#e8e5df\] {
+/* .dark .border-2.border-\[\#e8e5df\] {
   border-color: #2a2a30 !important;
-}
+} */
 
 /* --- Placeholder Text in Dark --- */
 .dark .placeholder-\[\#a8a199\]::placeholder {

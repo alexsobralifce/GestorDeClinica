@@ -14,7 +14,7 @@ if (!connectionString) {
 }
 
 const pool = new pg.Pool({
-  connectionString,
+  connectionString: connectionString as string,
   ssl: connectionString.includes('localhost') ? false : { rejectUnauthorized: false },
 });
 
