@@ -29,13 +29,14 @@ const allowedOrigins = [
 ];
 
 app.use('/*', cors({
-  origin: (origin) => {
-    if (!origin) return allowedOrigins[0]; // Allow requests with no origin (like mobile apps or curl)
-    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
-      return origin;
-    }
-    return allowedOrigins[0]; // Fallback
+  origin: (origin, c) => {
+    const method = c.req.method;
+    console.log(`[CORS DEBUG] Method: ${method}, Origin: ${origin}`);
+    // Permissive: allow any origin by returning it
+    return origin || 'http://localhost:3000';
   },
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
 }));
 
