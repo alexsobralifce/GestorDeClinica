@@ -176,7 +176,7 @@ export function ProntuarioListing() {
                   layout
                 >
                   <Link
-                    to={`/prontuario/${patient.id}`}
+                    to={`/dashboard/prontuario/${patient.id}`}
                     className="group block rounded-2xl border border-[#e8e5df] bg-white p-5 shadow-sm transition-all hover:shadow-lg hover:border-[#4a7c65]/30 hover:-translate-y-0.5"
                   >
                     {/* Patient Header */}

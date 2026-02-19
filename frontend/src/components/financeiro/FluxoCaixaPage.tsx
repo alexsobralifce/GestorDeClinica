@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  DollarSign,
   TrendingUp,
   TrendingDown,
   Wallet,
@@ -20,14 +19,25 @@ import { KPICard } from '../shared/KPICard';
 import { GraficoFluxoCaixa } from './GraficoFluxoCaixa';
 import { DespesaModal } from '../shared/DespesaModal';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+
+import { useDevice } from '../../contexts/DeviceContext';
+import { FinanceiroMobile } from '../mobile/FinanceiroMobile';
+import { FluxoCaixaProvider } from '../../lib/contexts/FluxoCaixaContext';
 
 export function FluxoCaixaPage() {
+  const { isMobile } = useDevice();
+
+  if (isMobile) {
+    return (
+      <FluxoCaixaProvider>
+        <FinanceiroMobile />
+      </FluxoCaixaProvider>
+    );
+  }
+
   const { projecao, loading, filtros, aplicarFiltros } = useFluxoCaixa();
   const [showFiltros, setShowFiltros] = useState(false);
   const [showDespesaModal, setShowDespesaModal] = useState(false);
-  const [periodoSelecionado, setPeriodoSelecionado] = useState<'mes' | 'trimestre' | 'ano'>('mes');
 
   const handlePeriodoChange = (preset: 'hoje' | 'semana' | 'mes' | 'trimestre' | 'ano') => {
     const hoje = new Date();
@@ -284,7 +294,7 @@ export function FluxoCaixaPage() {
           <h3 className="text-xl font-bold text-[#2b2926] mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
             Receitas por Categoria
           </h3>
-          
+
           {projecao.entradas.porCategoria.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={250}>
@@ -345,7 +355,7 @@ export function FluxoCaixaPage() {
           <h3 className="text-xl font-bold text-[#2b2926] mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
             Despesas por Categoria
           </h3>
-          
+
           {projecao.saidas.porCategoria.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={250}>
@@ -407,16 +417,15 @@ export function FluxoCaixaPage() {
         <h3 className="text-xl font-bold text-[#2b2926] mb-6" style={{ fontFamily: 'var(--font-heading)' }}>
           Comparativo com Período Anterior
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center p-4 rounded-xl bg-white">
             <p className="text-sm text-[#7a7369] mb-2">Receitas</p>
             <p className="text-2xl font-bold text-[#4a7c65] mb-1">
               {formatCurrency(projecao.comparativoMesAnterior.receita.valor)}
             </p>
-            <p className={`text-sm font-medium ${
-              projecao.comparativoMesAnterior.receita.variacao >= 0 ? 'text-[#4a7c65]' : 'text-[#e85d3f]'
-            }`}>
+            <p className={`text-sm font-medium ${projecao.comparativoMesAnterior.receita.variacao >= 0 ? 'text-[#4a7c65]' : 'text-[#e85d3f]'
+              }`}>
               {projecao.comparativoMesAnterior.receita.variacao >= 0 ? '↗' : '↘'}{' '}
               {Math.abs(projecao.comparativoMesAnterior.receita.variacao).toFixed(1)}%
             </p>
@@ -427,9 +436,8 @@ export function FluxoCaixaPage() {
             <p className="text-2xl font-bold text-[#e85d3f] mb-1">
               {formatCurrency(projecao.comparativoMesAnterior.despesa.valor)}
             </p>
-            <p className={`text-sm font-medium ${
-              projecao.comparativoMesAnterior.despesa.variacao >= 0 ? 'text-[#e85d3f]' : 'text-[#4a7c65]'
-            }`}>
+            <p className={`text-sm font-medium ${projecao.comparativoMesAnterior.despesa.variacao >= 0 ? 'text-[#e85d3f]' : 'text-[#4a7c65]'
+              }`}>
               {projecao.comparativoMesAnterior.despesa.variacao >= 0 ? '↗' : '↘'}{' '}
               {Math.abs(projecao.comparativoMesAnterior.despesa.variacao).toFixed(1)}%
             </p>
@@ -440,9 +448,8 @@ export function FluxoCaixaPage() {
             <p className="text-2xl font-bold text-[#2b2926] mb-1">
               {formatCurrency(projecao.comparativoMesAnterior.saldo.valor)}
             </p>
-            <p className={`text-sm font-medium ${
-              projecao.comparativoMesAnterior.saldo.variacao >= 0 ? 'text-[#4a7c65]' : 'text-[#e85d3f]'
-            }`}>
+            <p className={`text-sm font-medium ${projecao.comparativoMesAnterior.saldo.variacao >= 0 ? 'text-[#4a7c65]' : 'text-[#e85d3f]'
+              }`}>
               {projecao.comparativoMesAnterior.saldo.variacao >= 0 ? '↗' : '↘'}{' '}
               {Math.abs(projecao.comparativoMesAnterior.saldo.variacao).toFixed(1)}%
             </p>

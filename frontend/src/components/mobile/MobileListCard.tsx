@@ -3,7 +3,7 @@ import { ChevronRight } from 'lucide-react';
 interface MobileListCardProps {
   avatar?: React.ReactNode | string;
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode | string;
   trailing?: React.ReactNode;
   showChevron?: boolean;
   onClick?: () => void;

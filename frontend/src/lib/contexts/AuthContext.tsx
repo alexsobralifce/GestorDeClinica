@@ -41,8 +41,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         setUser(response.data.user);
         setToken(savedToken);
-      } catch {
-        // Token invalid or expired
+      } catch (error: any) {
+        // Token invalid or expired - clear and continue as unauthenticated
+        console.warn('Token validation failed:', error?.message);
         localStorage.removeItem('auth_token');
         setToken(null);
         setUser(null);
@@ -55,12 +56,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const response = await apiClient.post('/auth/login', { email, password });
-    const { token: newToken, user: userData } = response.data;
+    try {
+      const response = await apiClient.post('/auth/login', { email, password });
+      const { token: newToken, user: userData } = response.data;
 
-    localStorage.setItem('auth_token', newToken);
-    setToken(newToken);
-    setUser(userData);
+      localStorage.setItem('auth_token', newToken);
+      setToken(newToken);
+      setUser(userData);
+    } catch (error: any) {
+      console.error('Login failed:', error?.response?.data || error?.message);
+      throw new Error(error?.response?.data?.error || 'Falha ao fazer login');
+    }
   }, []);
 
   const logout = useCallback(() => {
@@ -71,8 +77,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const hasModule = useCallback(
     (module: string) => {
+      // If no user, no access
       if (!user) return false;
+
+      // Admin has access to everything
       if (user.role === 'ADMIN') return true;
+
+      // Check if module exists in user's modules
+      if (!user.modules || !Array.isArray(user.modules)) {
+        // If no modules defined, allow access for now (backward compatibility)
+        return true;
+      }
+
       return user.modules.includes(module);
     },
     [user]

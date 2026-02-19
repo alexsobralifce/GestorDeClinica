@@ -72,7 +72,7 @@ app.get('/patients/:id/ehr/timeline', async (c) => {
 app.post('/patients/:id/ehr/events', async (c) => {
   const patientId = c.req.param('id');
   const body = await c.req.json();
-  const { type, encounter_id, payload } = body;
+  const { type, encounter_id, payload, professional_id } = body;
   const user = c.get('user');
 
   // Check write permission for this specific event type (logic in canEditEHR generic)
@@ -89,6 +89,13 @@ app.post('/patients/:id/ehr/events', async (c) => {
   try {
     await pool.query('BEGIN');
 
+    // Determine which professional_id to use (from body or fallback to user.id if user is a professional)
+    const effectiveProfessionalId = professional_id;
+    if (!effectiveProfessionalId) {
+      await pool.query('ROLLBACK');
+      return c.json({ error: 'professional_id is required' }, 400);
+    }
+
     // Create Event
     const insertQuery = `
       INSERT INTO ehr_events (
@@ -97,16 +104,16 @@ app.post('/patients/:id/ehr/events', async (c) => {
       RETURNING id
     `;
     const res = await pool.query(insertQuery, [
-      patientId, user.id, encounter_id, type, JSON.stringify(payload)
+      patientId, effectiveProfessionalId, encounter_id, type, JSON.stringify(payload)
     ]);
     const eventId = res.rows[0].id;
 
-    // Create Initial Version
+    // Create Initial Version (created_by must also reference professionals.id)
     await pool.query(
       `INSERT INTO ehr_event_versions (
         event_id, version, payload, created_by, reason_for_change
       ) VALUES ($1, 1, $2, $3, 'Initial creation')`,
-      [eventId, JSON.stringify(payload), user.id]
+      [eventId, JSON.stringify(payload), effectiveProfessionalId]
     );
 
     // Audit

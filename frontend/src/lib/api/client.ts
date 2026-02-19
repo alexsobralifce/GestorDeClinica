@@ -1,8 +1,10 @@
 import axios from 'axios';
 
 // @ts-ignore
-const envUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '');
-const API_URL = envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+const envUrl = import.meta.env.VITE_API_URL;
+// In production, VITE_API_URL is empty → use relative /api (same-origin, backend serves frontend)
+// In dev, fallback to localhost:3001/api
+const API_URL = envUrl ? (envUrl.endsWith('/api') ? envUrl : `${envUrl.replace(/\/$/, '')}/api`) : '/api';
 
 const apiClient = axios.create({
   baseURL: API_URL,

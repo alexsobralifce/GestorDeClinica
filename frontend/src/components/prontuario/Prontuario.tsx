@@ -35,7 +35,10 @@ import {
 } from 'lucide-react';
 import { patientsApi, type Patient } from '../../lib/api/patients';
 import { ehrApi, type EhrEvent } from '../../lib/api/ehr';
+import { professionalsApi, type Professional } from '../../lib/api/professionals';
 import { especialidadeConfig } from '../../lib/types';
+import { useDevice } from '../../contexts/DeviceContext';
+import { ProntuarioMobile } from '../mobile/ProntuarioMobile';
 
 // Map event_types to specialties for color coding
 const eventTypeConfig: Record<string, { cor: string; corClara: string; label: string; icon: any }> = {
@@ -51,11 +54,15 @@ function getEventConfig(type: string) {
   return eventTypeConfig[type] || eventTypeConfig.default;
 }
 
+
+
 export function Prontuario() {
   const { id } = useParams();
-  const [activeTab, setActiveTab] = useState<'timeline' | 'documentos' | 'medicamentos'>('timeline');
+  const { isMobile } = useDevice();
+
   const [isRecording, setIsRecording] = useState(false);
   const [showNovoRegistro, setShowNovoRegistro] = useState(false);
+  const [activeTab, setActiveTab] = useState('timeline');
 
   // Data states
   const [patient, setPatient] = useState<Patient | null>(null);
@@ -71,6 +78,10 @@ export function Prontuario() {
   const [formSpecialty, setFormSpecialty] = useState('medicina');
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  // Professional selection
+  const [professionals, setProfessionals] = useState<Professional[]>([]);
+  const [selectedProfessionalId, setSelectedProfessionalId] = useState<string>('');
 
   // Filters
   const [filterType, setFilterType] = useState('');
@@ -90,6 +101,16 @@ export function Prontuario() {
         setError('Paciente não encontrado');
       })
       .finally(() => setLoading(false));
+
+    // Load professionals for selection
+    professionalsApi.getAll()
+      .then(data => {
+        setProfessionals(data);
+        if (data.length > 0) {
+          setSelectedProfessionalId(data[0].id);
+        }
+      })
+      .catch(console.error);
   }, [id]);
 
   // Load timeline events
@@ -124,6 +145,7 @@ export function Prontuario() {
     try {
       await ehrApi.createEvent(id, {
         type: formType,
+        professional_id: selectedProfessionalId,
         payload: {
           title: formTitle,
           content: formContent,
@@ -144,6 +166,12 @@ export function Prontuario() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleMobileSubmit = async (data: any) => {
+    if (!id) return;
+    await ehrApi.createEvent(id, data);
+    loadTimeline();
   };
 
   const calcularIdade = (dataNascimento: string) => {
@@ -182,6 +210,20 @@ export function Prontuario() {
           </Link>
         </div>
       </div>
+    );
+  }
+
+  // Mobile render
+  if (isMobile) {
+    return (
+      <ProntuarioMobile
+        patient={patient}
+        events={events}
+        loading={eventsLoading}
+        onRefresh={loadTimeline}
+        onSubmitEvent={handleMobileSubmit}
+        professionals={professionals}
+      />
     );
   }
 
@@ -292,8 +334,8 @@ export function Prontuario() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`relative pb-3 font-medium transition-colors ${activeTab === tab
-                  ? 'text-[#4a7c65]'
-                  : 'text-[#7a7369] hover:text-[#5c5650]'
+                ? 'text-[#4a7c65]'
+                : 'text-[#7a7369] hover:text-[#5c5650]'
                 }`}
             >
               {tab === 'timeline' ? 'Timeline' : tab === 'documentos' ? 'Documentos' : 'Medicamentos'}
@@ -369,8 +411,8 @@ export function Prontuario() {
                         key={opt.value}
                         onClick={() => setFilterType(opt.value)}
                         className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${filterType === opt.value
-                            ? 'bg-[#4a7c65] text-white'
-                            : 'bg-[#f5f3ef] text-[#5c5650] hover:bg-[#e8e5df]'
+                          ? 'bg-[#4a7c65] text-white'
+                          : 'bg-[#f5f3ef] text-[#5c5650] hover:bg-[#e8e5df]'
                           }`}
                       >
                         {opt.label}
@@ -618,6 +660,26 @@ export function Prontuario() {
                         required
                         disabled={submitting}
                       />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-[#5c5650]">
+                        Profissional Responsável
+                      </label>
+                      <select
+                        value={selectedProfessionalId}
+                        onChange={(e) => setSelectedProfessionalId(e.target.value)}
+                        className="input"
+                        disabled={submitting}
+                        required
+                      >
+                        <option value="">Selecione um profissional</option>
+                        {professionals.map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} ({p.specialty})
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

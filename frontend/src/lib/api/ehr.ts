@@ -27,6 +27,7 @@ export interface TimelineFilters {
 export interface CreateEventPayload {
   type: string;
   encounter_id?: string;
+  professional_id?: string; // Optional because backend might infer it, but we want to be able to send it
   payload: {
     title: string;
     content: string;

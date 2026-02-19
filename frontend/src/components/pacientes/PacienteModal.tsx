@@ -1,26 +1,27 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Phone, Mail, Calendar, Droplet, AlertTriangle } from 'lucide-react';
+import { X, User, Phone, Mail, Calendar, Droplet, AlertTriangle, Loader2 } from 'lucide-react';
 import { usePacientes } from '../../lib/contexts/PacienteContext';
-import type { Paciente } from '../../lib/types';
+import { Patient } from '../../lib/api/patients';
 
 interface PacienteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  paciente?: Paciente;
+  paciente?: Patient;
   mode: 'create' | 'edit';
 }
 
 export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModalProps) {
   const { addPaciente, updatePaciente } = usePacientes();
-  
+  const [submitting, setSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     nome: '',
     cpf: '',
     dataNascimento: '',
     telefone: '',
     email: '',
-    grupoSanguineo: '',
+    // grupoSanguineo: '', // Removing as api/patients.ts doesn't support it yet
     alergias: '',
     condicoes: '',
   });
@@ -30,14 +31,14 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
   useEffect(() => {
     if (paciente && mode === 'edit') {
       setFormData({
-        nome: paciente.nome,
-        cpf: paciente.cpf,
-        dataNascimento: paciente.dataNascimento,
-        telefone: paciente.telefone,
-        email: paciente.email,
-        grupoSanguineo: paciente.grupoSanguineo,
-        alergias: paciente.alergias.join(', '),
-        condicoes: paciente.condicoes.join(', '),
+        nome: paciente.name,
+        cpf: paciente.cpf || '',
+        dataNascimento: paciente.birth_date ? paciente.birth_date.split('T')[0] : '',
+        telefone: paciente.phone || '',
+        email: paciente.email || '',
+        // grupoSanguineo: paciente.blood_type || '', // Not in interface
+        alergias: paciente.allergies ? paciente.allergies.join(', ') : '',
+        condicoes: paciente.medical_conditions ? paciente.medical_conditions.join(', ') : '',
       });
     } else {
       setFormData({
@@ -46,7 +47,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
         dataNascimento: '',
         telefone: '',
         email: '',
-        grupoSanguineo: '',
+        // grupoSanguineo: '',
         alergias: '',
         condicoes: '',
       });
@@ -73,16 +74,16 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
+
     let formattedValue = value;
     if (name === 'cpf') {
       formattedValue = formatCPF(value);
     } else if (name === 'telefone') {
       formattedValue = formatPhone(value);
     }
-    
+
     setFormData(prev => ({ ...prev, [name]: formattedValue }));
-    
+
     // Limpar erro do campo
     if (errors[name]) {
       setErrors(prev => {
@@ -120,31 +121,38 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validate()) {
       return;
     }
 
-    const pacienteData = {
-      nome: formData.nome,
-      cpf: formData.cpf,
-      dataNascimento: formData.dataNascimento,
-      telefone: formData.telefone,
-      email: formData.email,
-      grupoSanguineo: formData.grupoSanguineo || 'Não informado',
-      alergias: formData.alergias ? formData.alergias.split(',').map(a => a.trim()).filter(Boolean) : [],
-      condicoes: formData.condicoes ? formData.condicoes.split(',').map(c => c.trim()).filter(Boolean) : [],
-    };
+    setSubmitting(true);
+    try {
+      const pacienteData = {
+        name: formData.nome,
+        cpf: formData.cpf,
+        birth_date: formData.dataNascimento,
+        phone: formData.telefone,
+        email: formData.email,
+        // blood_type: formData.grupoSanguineo,
+        allergies: formData.alergias ? formData.alergias.split(',').map(a => a.trim()).filter(Boolean) : [],
+        medical_conditions: formData.condicoes ? formData.condicoes.split(',').map(c => c.trim()).filter(Boolean) : [],
+      };
 
-    if (mode === 'edit' && paciente) {
-      updatePaciente(paciente.id, pacienteData);
-    } else {
-      addPaciente(pacienteData);
+      if (mode === 'edit' && paciente) {
+        await updatePaciente(paciente.id, pacienteData);
+      } else {
+        await addPaciente(pacienteData);
+      }
+      onClose();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      // Could set a general error state here
+    } finally {
+      setSubmitting(false);
     }
-
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -157,7 +165,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose}
+          onClick={() => !submitting && onClose()}
           className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         />
 
@@ -183,6 +191,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                 <button
                   onClick={onClose}
                   className="btn-icon flex-shrink-0 ml-4"
+                  disabled={submitting}
                 >
                   <X className="h-5 w-5 text-[#7a7369]" />
                 </button>
@@ -202,7 +211,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                   Dados Pessoais
                 </h3>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-[#2b2926] mb-2.5">
@@ -215,6 +224,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                     onChange={handleChange}
                     className={`input-field ${errors.nome ? 'border-[#e85d3f] focus:ring-[#e85d3f]/10' : ''}`}
                     placeholder="Digite o nome completo"
+                    disabled={submitting}
                   />
                   {errors.nome && (
                     <p className="text-xs text-[#e85d3f] mt-2 flex items-center gap-1">
@@ -236,6 +246,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                     maxLength={14}
                     className={`input-field ${errors.cpf ? 'border-[#e85d3f] focus:ring-[#e85d3f]/10' : ''}`}
                     placeholder="000.000.000-00"
+                    disabled={submitting}
                   />
                   {errors.cpf && (
                     <p className="text-xs text-[#e85d3f] mt-2 flex items-center gap-1">
@@ -257,6 +268,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                       value={formData.dataNascimento}
                       onChange={handleChange}
                       className={`input-field pl-12 ${errors.dataNascimento ? 'border-[#e85d3f] focus:ring-[#e85d3f]/10' : ''}`}
+                      disabled={submitting}
                     />
                   </div>
                   {errors.dataNascimento && (
@@ -279,7 +291,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                   Contato
                 </h3>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-semibold text-[#2b2926] mb-2.5">
@@ -293,6 +305,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                     maxLength={15}
                     className={`input-field ${errors.telefone ? 'border-[#e85d3f] focus:ring-[#e85d3f]/10' : ''}`}
                     placeholder="(00) 00000-0000"
+                    disabled={submitting}
                   />
                   {errors.telefone && (
                     <p className="text-xs text-[#e85d3f] mt-2 flex items-center gap-1">
@@ -315,6 +328,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                       onChange={handleChange}
                       className={`input-field pl-12 ${errors.email ? 'border-[#e85d3f] focus:ring-[#e85d3f]/10' : ''}`}
                       placeholder="email@exemplo.com"
+                      disabled={submitting}
                     />
                   </div>
                   {errors.email && (
@@ -337,8 +351,9 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                   Dados Clínicos
                 </h3>
               </div>
-              
+
               <div className="grid grid-cols-1 gap-5">
+                {/* 
                 <div>
                   <label className="block text-sm font-semibold text-[#2b2926] mb-2.5 flex items-center gap-2">
                     <Droplet className="h-4 w-4 text-[#e85d3f]" />
@@ -349,6 +364,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                     value={formData.grupoSanguineo}
                     onChange={(e) => setFormData(prev => ({ ...prev, grupoSanguineo: e.target.value }))}
                     className="input-field"
+                    disabled={submitting}
                   >
                     <option value="">Selecione</option>
                     <option value="A+">A+</option>
@@ -361,6 +377,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                     <option value="O-">O-</option>
                   </select>
                 </div>
+                */}
 
                 <div>
                   <label className="block text-sm font-semibold text-[#2b2926] mb-2.5">
@@ -373,6 +390,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                     onChange={handleChange}
                     className="input-field"
                     placeholder="Ex: Dipirona, Penicilina (separar por vírgula)"
+                    disabled={submitting}
                   />
                   <p className="text-xs text-[#a8a199] mt-2">
                     Separe múltiplas alergias por vírgula
@@ -390,6 +408,7 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                     rows={3}
                     className="input-field resize-none"
                     placeholder="Ex: Hipertensão, Diabetes (separar por vírgula)"
+                    disabled={submitting}
                   />
                   <p className="text-xs text-[#a8a199] mt-2">
                     Separe múltiplas condições por vírgula
@@ -404,13 +423,16 @@ export function PacienteModal({ isOpen, onClose, paciente, mode }: PacienteModal
                 type="button"
                 onClick={onClose}
                 className="btn-secondary"
+                disabled={submitting}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="btn-premium"
+                className="btn-premium flex items-center gap-2"
+                disabled={submitting}
               >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 {mode === 'edit' ? 'Salvar Alterações' : 'Cadastrar Paciente'}
               </button>
             </div>

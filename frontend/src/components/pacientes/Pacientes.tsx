@@ -13,26 +13,38 @@ import {
   Trash2,
   Calendar,
   User,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { usePacientes } from '../../lib/contexts/PacienteContext';
 import { PacienteModal } from './PacienteModal';
+import { Patient } from '../../lib/api/patients';
+
+import { useDevice } from '../../contexts/DeviceContext';
+import { PacientesMobile } from '../mobile/PacientesMobile';
 
 export function Pacientes() {
-  const { pacientes, deletePaciente, selecionarPaciente } = usePacientes();
+  const { isMobile } = useDevice();
+  const { pacientes, deletePaciente, selecionarPaciente, loading, refreshPacientes } = usePacientes();
+
+  if (isMobile) {
+    return <PacientesMobile />;
+  }
   const [searchTerm, setSearchTerm] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
-  const [pacienteEditando, setPacienteEditando] = useState<any>(null);
+  const [pacienteEditando, setPacienteEditando] = useState<Patient | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const pacientesFiltrados = pacientes.filter(
     (paciente) =>
-      paciente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      paciente.cpf.includes(searchTerm) ||
-      paciente.telefone.includes(searchTerm)
+      paciente.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (paciente.cpf && paciente.cpf.includes(searchTerm)) ||
+      (paciente.phone && paciente.phone.includes(searchTerm))
   );
 
-  const calcularIdade = (dataNascimento: string) => {
+  const calcularIdade = (dataNascimento?: string) => {
+    if (!dataNascimento) return 0;
     const hoje = new Date();
     const nascimento = new Date(dataNascimento);
     let idade = hoje.getFullYear() - nascimento.getFullYear();
@@ -49,15 +61,15 @@ export function Pacientes() {
     setModalOpen(true);
   };
 
-  const handleEditarPaciente = (paciente: any) => {
+  const handleEditarPaciente = (paciente: Patient) => {
     setModalMode('edit');
     setPacienteEditando(paciente);
     setModalOpen(true);
   };
 
-  const handleExcluirPaciente = (id: string) => {
+  const handleExcluirPaciente = async (id: string) => {
     if (confirmDelete === id) {
-      deletePaciente(id);
+      await deletePaciente(id);
       setConfirmDelete(null);
     } else {
       setConfirmDelete(id);
@@ -65,7 +77,7 @@ export function Pacientes() {
     }
   };
 
-  const handleVerProntuario = (paciente: any) => {
+  const handleVerProntuario = (paciente: Patient) => {
     selecionarPaciente(paciente.id);
   };
 
@@ -83,18 +95,35 @@ export function Pacientes() {
                 <User className="h-3.5 w-3.5" />
                 {pacientes.length} paciente{pacientes.length !== 1 && 's'}
               </div>
+              {loading && (
+                <div className="flex items-center gap-2 text-sm text-[#a8a199]">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Atualizando...
+                </div>
+              )}
             </div>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleNovoPaciente}
-            className="btn-primary flex items-center gap-2.5"
-          >
-            <UserPlus className="h-5 w-5" />
-            <span>Novo Paciente</span>
-          </motion.button>
+          <div className="flex gap-2">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => refreshPacientes()}
+              className="btn-secondary"
+              title="Atualizar lista"
+            >
+              <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleNovoPaciente}
+              className="btn-primary flex items-center gap-2.5"
+            >
+              <UserPlus className="h-5 w-5" />
+              <span>Novo Paciente</span>
+            </motion.button>
+          </div>
         </div>
 
         {/* Busca */}
@@ -124,7 +153,7 @@ export function Pacientes() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ 
+              transition={{
                 delay: index * 0.05,
                 layout: { duration: 0.3 }
               }}
@@ -141,7 +170,7 @@ export function Pacientes() {
                     >
                       <div className="relative">
                         <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4a7c65] to-[#3d6653] text-white text-2xl font-bold shadow-lg">
-                          {paciente.nome
+                          {paciente.name
                             .split(' ')
                             .map((n) => n[0])
                             .slice(0, 2)
@@ -157,19 +186,16 @@ export function Pacientes() {
                     <div className="flex-1 min-w-0">
                       {/* Nome */}
                       <h3 className="text-2xl font-bold text-[#2b2926] mb-2 tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
-                        {paciente.nome}
+                        {paciente.name}
                       </h3>
 
                       {/* Informações demográficas */}
                       <div className="flex flex-wrap items-center gap-3 mb-4">
                         <div className="badge badge-neutral">
                           <Calendar className="h-3.5 w-3.5" />
-                          {calcularIdade(paciente.dataNascimento)} anos
+                          {calcularIdade(paciente.birth_date)} anos
                         </div>
-                        <div className="badge badge-info">
-                          <Heart className="h-3.5 w-3.5" />
-                          {paciente.grupoSanguineo}
-                        </div>
+                        {/* blood_type removed as it is not in Patient interface */}
                         <span className="text-sm text-[#a8a199]">
                           {paciente.cpf}
                         </span>
@@ -182,7 +208,7 @@ export function Pacientes() {
                             <Phone className="h-4 w-4 text-[#4a7c65]" />
                           </div>
                           <span className="text-sm text-[#5c5650] font-medium">
-                            {paciente.telefone}
+                            {paciente.phone || 'Sem telefone'}
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
@@ -190,24 +216,24 @@ export function Pacientes() {
                             <Mail className="h-4 w-4 text-[#4a7c65]" />
                           </div>
                           <span className="text-sm text-[#5c5650]">
-                            {paciente.email}
+                            {paciente.email || 'Sem e-mail'}
                           </span>
                         </div>
                       </div>
 
                       {/* Alertas Clínicos */}
-                      {(paciente.alergias.length > 0 || paciente.condicoes.length > 0) && (
+                      {((paciente.allergies && paciente.allergies.length > 0) || (paciente.medical_conditions && paciente.medical_conditions.length > 0)) && (
                         <div className="flex flex-wrap gap-2">
-                          {paciente.alergias.length > 0 && (
+                          {paciente.allergies && paciente.allergies.length > 0 && (
                             <div className="badge badge-danger">
                               <AlertTriangle className="h-3.5 w-3.5" />
-                              {paciente.alergias.length} alergia(s)
+                              {paciente.allergies.length} alergia(s)
                             </div>
                           )}
-                          {paciente.condicoes.length > 0 && (
+                          {paciente.medical_conditions && paciente.medical_conditions.length > 0 && (
                             <div className="badge badge-warning">
                               <Heart className="h-3.5 w-3.5" />
-                              {paciente.condicoes.length} condição(ões)
+                              {paciente.medical_conditions.length} condição(ões)
                             </div>
                           )}
                         </div>
@@ -218,7 +244,7 @@ export function Pacientes() {
                   {/* Ações */}
                   <div className="flex flex-row lg:flex-col gap-2 justify-start lg:justify-start">
                     <Link
-                      to={`/prontuario/${paciente.id}`}
+                      to={`/dashboard/prontuario/${paciente.id}`}
                       onClick={() => handleVerProntuario(paciente)}
                       className="btn-premium text-sm whitespace-nowrap"
                     >
@@ -240,11 +266,10 @@ export function Pacientes() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleExcluirPaciente(paciente.id)}
-                      className={`btn text-sm whitespace-nowrap transition-all ${
-                        confirmDelete === paciente.id
-                          ? 'btn-danger'
-                          : 'btn-ghost text-[#e85d3f] hover:bg-[#e85d3f]/10'
-                      }`}
+                      className={`btn text-sm whitespace-nowrap transition-all ${confirmDelete === paciente.id
+                        ? 'btn-danger'
+                        : 'btn-ghost text-[#e85d3f] hover:bg-[#e85d3f]/10'
+                        }`}
                     >
                       <Trash2 className="h-4 w-4" />
                       {confirmDelete === paciente.id ? 'Confirmar?' : 'Excluir'}
@@ -257,7 +282,7 @@ export function Pacientes() {
         </AnimatePresence>
 
         {/* Estado vazio */}
-        {pacientesFiltrados.length === 0 && (
+        {!loading && pacientesFiltrados.length === 0 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -291,9 +316,9 @@ export function Pacientes() {
       <PacienteModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        paciente={pacienteEditando}
+        paciente={pacienteEditando || undefined}
         mode={modalMode}
       />
-    </div>
+    </div >
   );
 }

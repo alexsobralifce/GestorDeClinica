@@ -6,11 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "node --import tsx start.mjs",
-    "start": "echo 'Running migrations...' && npm run migrate && echo 'Migrations complete' && tsx src/index.ts",
+    "start": "echo 'Running migrations...' && npm run migrate && echo 'Migrations complete' && node dist/index.js",
     "build": "tsc",
-    "migrate": "tsx src/db/migrate.ts",
-    "test:db": "tsx src/db/test-connection.ts",
-    "seed": "tsx src/db/seeds/default-admin.ts",
+    "migrate": "node --import tsx/esm src/db/migrate.ts",
+    "test:db": "node --import tsx/esm src/db/test-connection.ts",
+    "seed": "node --import tsx/esm src/db/seeds/default-admin.ts",
     "build:prod": "cd ../frontend && npm install --include=dev && npm run build && cd ../backend && npm install --include=dev && tsc"
   },
   "dependencies": {

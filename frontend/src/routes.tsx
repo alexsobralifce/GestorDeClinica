@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import { LandingPage } from "./components/landing/LandingPage";
 import { Layout } from "./components/layout/Layout";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { AgendaProfissional } from "./components/agenda/AgendaProfissional";
@@ -6,26 +7,27 @@ import { Prontuario } from "./components/prontuario/Prontuario";
 import { ProntuarioListing } from "./components/prontuario/ProntuarioListing";
 import { Pacientes } from "./components/pacientes/Pacientes";
 import { NotFound } from "./components/NotFound";
+import { ErrorPage } from "./components/ErrorPage";
 import { LoginPage } from "./components/auth/LoginPage";
 
 // Financeiro
 import { FinanceiroPage } from "./components/financeiro/FinanceiroPage";
 import { FluxoCaixaPage } from "./components/financeiro/FluxoCaixaPage";
+import { ContasPagarPage } from "./components/financeiro/ContasPagarPage";
+import { ContasReceberPage } from "./components/financeiro/ContasReceberPage";
 import { PlaceholderPage } from "./components/shared/PlaceholderPage";
 
 // BI
 import { DashboardExecutivoPlaceholder } from "./components/bi/DashboardExecutivoPlaceholder";
 
 // Administrativo
-import { AdminPlaceholder } from "./components/administrativo/AdminPlaceholder";
+
 
 // Teste de Agendamento
 import { TesteAgendamento } from "./pages/TesteAgendamento";
 
 // Imports para placeholders
 import {
-  Receipt,
-  CreditCard,
   FileBarChart,
   Users as UsersIcon,
   TrendingUp,
@@ -45,10 +47,26 @@ import { AdminGuard } from "./components/auth/AdminGuard";
 // Protected Route wrapper component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('auth_token');
+
+  // Debug log
+  console.log('[ProtectedRoute] Token exists:', !!token);
+
   if (!token) {
+    console.log('[ProtectedRoute] Redirecting to /login');
     return <Navigate to="/login" replace />;
   }
   return <>{children}</>;
+}
+
+// Home page - redirect to dashboard if authenticated, otherwise show landing
+function HomePage() {
+  const token = localStorage.getItem('auth_token');
+
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <LandingPage />;
 }
 
 export const router = createBrowserRouter([
@@ -58,11 +76,16 @@ export const router = createBrowserRouter([
   },
   {
     path: "/",
+    element: <HomePage />,
+  },
+  {
+    path: "/dashboard",
     element: (
       <ProtectedRoute>
         <Layout />
       </ProtectedRoute>
     ),
+    errorElement: <ErrorPage />,
     children: [
       { index: true, Component: Dashboard },
 
@@ -89,32 +112,10 @@ export const router = createBrowserRouter([
           { path: "financeiro", Component: FinanceiroPage },
           { path: "financeiro/fluxo-caixa", Component: FluxoCaixaPage },
           {
-            path: "financeiro/contas-receber", Component: () => <PlaceholderPage
-              title="Contas a Receber"
-              description="Gestão de recebimentos, cobranças e inadimplência"
-              icon={Receipt}
-              features={[
-                'Dashboard de Recebimentos',
-                'Gestão de Cobranças',
-                'Envio Automático Multicanal',
-                'Controle de Inadimplência',
-                'Análise por Convênio'
-              ]}
-            />
+            path: "financeiro/contas-receber", Component: ContasReceberPage
           },
           {
-            path: "financeiro/contas-pagar", Component: () => <PlaceholderPage
-              title="Contas a Pagar"
-              description="Gestão de pagamentos, fornecedores e despesas"
-              icon={CreditCard}
-              features={[
-                'Agenda de Pagamentos',
-                'Aprovação de Despesas',
-                'Gestão de Fornecedores',
-                'Pagamentos Recorrentes',
-                'Controle de Fluxo'
-              ]}
-            />
+            path: "financeiro/contas-pagar", Component: ContasPagarPage
           },
           {
             path: "financeiro/relatorios", Component: () => <PlaceholderPage

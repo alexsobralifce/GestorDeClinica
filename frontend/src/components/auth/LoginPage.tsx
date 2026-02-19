@@ -1,19 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../lib/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, LogIn, Stethoscope, Loader2 } from 'lucide-react';
 
 export function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Wait for auth to load before redirecting
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      // Redirect to dashboard after successful login
+      navigate('/dashboard', { replace: true });
+    }
+  }, [authLoading, isAuthenticated, navigate]);
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center"
+        style={{
+          background: 'linear-gradient(135deg, #0f1a14 0%, #1a2e24 30%, #0d1b14 60%, #162416 100%)',
+        }}
+      >
+        <div className="animate-spin h-8 w-8 border-4 border-[#4a7c65] border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return null; // Will redirect via useEffect
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,8 +49,10 @@ export function LoginPage() {
     setIsLoading(true);
     try {
       await login(email, password);
+      // Redirect to dashboard after successful login
+      navigate('/dashboard', { replace: true });
     } catch (err: any) {
-      const msg = err?.response?.data?.error || 'Erro ao realizar login. Tente novamente.';
+      const msg = err?.message || err?.response?.data?.error || 'Erro ao realizar login. Tente novamente.';
       setError(msg);
     } finally {
       setIsLoading(false);

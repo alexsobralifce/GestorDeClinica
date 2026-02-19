@@ -3,12 +3,14 @@ import { cors } from 'hono/cors';
 import dotenv from 'dotenv';
 import { createServer } from 'node:http';
 import { getRequestListener } from '@hono/node-server';
+import bookingRouter from './routes/booking';
 import patientsRouter from './routes/patients';
 import professionalsRouter from './routes/professionals';
 import appointmentsRouter from './routes/appointments';
 import medicalRecordsRouter from './routes/medical-records';
 import financialRouter from './routes/financial';
 import categoriesRouter from './routes/categories';
+import accountsRouter from './routes/accounts';
 import ehrRouter from './routes/ehr';
 import filesRouter from './routes/files';
 import documentsRouter from './routes/documents';
@@ -51,6 +53,7 @@ app.get('/health', (c) => {
 
 // Auth routes (public - no middleware)
 app.route('/api/auth', authRouter);
+app.route('/api/booking', bookingRouter); // Public route
 
 // API routes
 app.route('/api/patients', patientsRouter);
@@ -59,6 +62,7 @@ app.route('/api/appointments', appointmentsRouter);
 app.route('/api/medical-records', medicalRecordsRouter);
 app.route('/api/financial', financialRouter);
 app.route('/api/categories', categoriesRouter);
+app.route('/api/accounts', accountsRouter);
 app.route('/api/users', usersRouter);
 
 // EHR Module Routes
@@ -108,7 +112,7 @@ app.onError((err, c) => {
   }, 500);
 });
 
-const port = parseInt(process.env.API_PORT || '3001');
+const port = parseInt(process.env.PORT || process.env.API_PORT || '3001');
 
 // Create HTTP server directly
 const listener = getRequestListener(app.fetch);

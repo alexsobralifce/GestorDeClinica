@@ -7,30 +7,22 @@ import {
   Users,
   FileText,
   Bell,
-  Settings,
   Menu,
   LogOut,
   X,
   ChevronDown,
   ChevronRight,
   DollarSign,
-  TrendingUp,
-  Receipt,
-  PiggyBank,
-  FileBarChart,
   BarChart3,
   Briefcase,
-  Shield,
-  Building2,
-  CreditCard,
-  FileSpreadsheet,
-  Activity,
   Stethoscope,
   Sun,
   Moon,
 } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../lib/contexts/AuthContext';
+import { DeviceProvider, useDevice } from '../../contexts/DeviceContext';
+import { MobileLayout } from '../mobile/MobileLayout';
 
 interface MenuItem {
   path?: string;
@@ -41,6 +33,15 @@ interface MenuItem {
 }
 
 export function Layout() {
+  return (
+    <DeviceProvider>
+      <LayoutContent />
+    </DeviceProvider>
+  );
+}
+
+function LayoutContent() {
+  const { isMobile } = useDevice();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
@@ -49,21 +50,22 @@ export function Layout() {
   const { isDark, toggleTheme } = useTheme();
   const { user, logout, hasModule } = useAuth();
 
+
   const allMenuItems: MenuItem[] = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' },
-    { path: '/agenda', label: 'Agenda', icon: Calendar, module: 'agenda' },
-    { path: '/pacientes', label: 'Pacientes', icon: Users, module: 'pacientes' },
-    { path: '/prontuario', label: 'Prontuário', icon: FileText, module: 'prontuario' },
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' },
+    { path: '/dashboard/agenda', label: 'Agenda', icon: Calendar, module: 'agenda' },
+    { path: '/dashboard/pacientes', label: 'Pacientes', icon: Users, module: 'pacientes' },
+    { path: '/dashboard/prontuario', label: 'Prontuário', icon: FileText, module: 'prontuario' },
     {
       label: 'Financeiro',
       icon: DollarSign,
       module: 'financeiro',
       submenu: [
-        { path: '/financeiro', label: 'Dashboard' },
-        { path: '/financeiro/fluxo-caixa', label: 'Fluxo de Caixa' },
-        { path: '/financeiro/contas-receber', label: 'Contas a Receber' },
-        { path: '/financeiro/contas-pagar', label: 'Contas a Pagar' },
-        { path: '/financeiro/relatorios', label: 'Relatórios' },
+        { path: '/dashboard/financeiro', label: 'Dashboard' },
+        { path: '/dashboard/financeiro/fluxo-caixa', label: 'Fluxo de Caixa' },
+        { path: '/dashboard/financeiro/contas-receber', label: 'Contas a Receber' },
+        { path: '/dashboard/financeiro/contas-pagar', label: 'Contas a Pagar' },
+        { path: '/dashboard/financeiro/relatorios', label: 'Relatórios' },
       ],
     },
     {
@@ -71,10 +73,10 @@ export function Layout() {
       icon: BarChart3,
       module: 'bi',
       submenu: [
-        { path: '/bi/dashboard-executivo', label: 'Dashboard Executivo' },
-        { path: '/bi/analise-pacientes', label: 'Análise de Pacientes' },
-        { path: '/bi/analise-financeira', label: 'Análise Financeira' },
-        { path: '/bi/previsoes', label: 'Previsões IA' },
+        { path: '/dashboard/bi/dashboard-executivo', label: 'Dashboard Executivo' },
+        { path: '/dashboard/bi/analise-pacientes', label: 'Análise de Pacientes' },
+        { path: '/dashboard/bi/analise-financeira', label: 'Análise Financeira' },
+        { path: '/dashboard/bi/previsoes', label: 'Previsões IA' },
       ],
     },
     {
@@ -82,10 +84,10 @@ export function Layout() {
       icon: Briefcase,
       module: 'admin',
       submenu: [
-        { path: '/admin/profissionais', label: 'Profissionais' },
-        { path: '/admin/convenios', label: 'Convênios' },
-        { path: '/admin/usuarios', label: 'Usuários' },
-        { path: '/admin/configuracoes', label: 'Configurações' },
+        { path: '/dashboard/admin/profissionais', label: 'Profissionais' },
+        { path: '/dashboard/admin/convenios', label: 'Convênios' },
+        { path: '/dashboard/admin/usuarios', label: 'Usuários' },
+        { path: '/dashboard/admin/configuracoes', label: 'Configurações' },
       ],
     },
   ];
@@ -108,6 +110,11 @@ export function Layout() {
       }
     });
   }, [location.pathname]);
+
+  // If mobile, render the dedicated mobile layout (after all hooks)
+  if (isMobile) {
+    return <MobileLayout />;
+  }
 
   const toggleSubmenu = (label: string) => {
     setExpandedMenus((prev) =>
@@ -290,7 +297,7 @@ export function Layout() {
                 </p>
               </div>
               <button
-                onClick={() => { logout(); navigate('/login'); }}
+                onClick={() => { logout(); navigate('/'); }}
                 className="btn-icon"
                 title="Sair"
               >

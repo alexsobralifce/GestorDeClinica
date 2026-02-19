@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Filter, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  Filter,
   Plus,
   Search,
   Calendar as CalendarIcon,
@@ -17,15 +17,23 @@ import { useAgendamentos } from '../../lib/AgendamentoContext';
 import { pacientesMock, profissionaisMock, statusConfig, especialidadeConfig } from '../../lib/types';
 import type { Agendamento } from '../../lib/types';
 
+import { useDevice } from '../../contexts/DeviceContext';
+import { AgendaMobile } from '../mobile/AgendaMobile';
+
 export function Agenda() {
+  const { isMobile } = useDevice();
   const { agendamentos, addAgendamento } = useAgendamentos();
+
+  if (isMobile) {
+    return <AgendaMobile />;
+  }
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedEspecialidade, setSelectedEspecialidade] = useState<string | null>(null);
   const [selectedProfissional, setSelectedProfissional] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [showFilters, setShowFilters] = useState(false);
   const [showNovoAgendamento, setShowNovoAgendamento] = useState(false);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     pacienteId: '',
@@ -41,19 +49,19 @@ export function Agenda() {
   const [searchPaciente, setSearchPaciente] = useState('');
 
   const especialidades = Object.entries(especialidadeConfig);
-  
+
   // Filtrar agendamentos
   const agendamentosFiltrados = agendamentos.filter(agendamento => {
     const profissional = profissionaisMock.find(p => p.id === agendamento.profissionalId);
-    
+
     if (selectedEspecialidade && profissional?.especialidade !== selectedEspecialidade) {
       return false;
     }
-    
+
     if (selectedProfissional && agendamento.profissionalId !== selectedProfissional) {
       return false;
     }
-    
+
     return true;
   });
 
@@ -125,6 +133,7 @@ export function Agenda() {
       data: formData.data,
       horaInicio: formData.horaInicio,
       horaFim: horaFim,
+      duracao: parseInt(formData.duracao),
       tipo: formData.tipo,
       status: 'pendente',
       sala: formData.sala || undefined,
@@ -132,7 +141,7 @@ export function Agenda() {
     };
 
     addAgendamento(novoAgendamento);
-    
+
     // Reset form
     setFormData({
       pacienteId: '',
@@ -175,7 +184,7 @@ export function Agenda() {
             <Filter className="h-5 w-5" />
             <span>Filtros</span>
           </button>
-          
+
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -205,11 +214,10 @@ export function Agenda() {
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setSelectedEspecialidade(null)}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                      selectedEspecialidade === null
-                        ? 'bg-[#4a7c65] text-white'
-                        : 'bg-[#f5f3ef] text-[#5c5650] hover:bg-[#e8e5df]'
-                    }`}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${selectedEspecialidade === null
+                      ? 'bg-[#4a7c65] text-white'
+                      : 'bg-[#f5f3ef] text-[#5c5650] hover:bg-[#e8e5df]'
+                      }`}
                   >
                     Todas
                   </button>
@@ -217,11 +225,10 @@ export function Agenda() {
                     <button
                       key={key}
                       onClick={() => setSelectedEspecialidade(key)}
-                      className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                        selectedEspecialidade === key
-                          ? 'text-white'
-                          : 'hover:bg-opacity-20'
-                      }`}
+                      className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${selectedEspecialidade === key
+                        ? 'text-white'
+                        : 'hover:bg-opacity-20'
+                        }`}
                       style={{
                         backgroundColor: selectedEspecialidade === key ? config.cor : config.corClara,
                         color: selectedEspecialidade === key ? 'white' : config.cor,
@@ -240,11 +247,10 @@ export function Agenda() {
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setSelectedProfissional(null)}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                      selectedProfissional === null
-                        ? 'bg-[#4a7c65] text-white'
-                        : 'bg-[#f5f3ef] text-[#5c5650] hover:bg-[#e8e5df]'
-                    }`}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${selectedProfissional === null
+                      ? 'bg-[#4a7c65] text-white'
+                      : 'bg-[#f5f3ef] text-[#5c5650] hover:bg-[#e8e5df]'
+                      }`}
                   >
                     Todos
                   </button>
@@ -252,11 +258,10 @@ export function Agenda() {
                     <button
                       key={profissional.id}
                       onClick={() => setSelectedProfissional(profissional.id)}
-                      className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                        selectedProfissional === profissional.id
-                          ? 'bg-[#4a7c65] text-white'
-                          : 'bg-[#f5f3ef] text-[#5c5650] hover:bg-[#e8e5df]'
-                      }`}
+                      className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${selectedProfissional === profissional.id
+                        ? 'bg-[#4a7c65] text-white'
+                        : 'bg-[#f5f3ef] text-[#5c5650] hover:bg-[#e8e5df]'
+                        }`}
                     >
                       {profissional.nome}
                     </button>
@@ -278,7 +283,7 @@ export function Agenda() {
             <ChevronLeft className="h-5 w-5" />
             Anterior
           </button>
-          
+
           <button
             onClick={() => setSelectedDate(new Date())}
             className="btn-secondary"
@@ -286,7 +291,7 @@ export function Agenda() {
             <CalendarIcon className="h-5 w-5" />
             Hoje
           </button>
-          
+
           <button
             onClick={() => changeDate(1)}
             className="btn-ghost"
@@ -336,7 +341,7 @@ export function Agenda() {
                   <div className="text-sm font-medium text-[#7a7369]">
                     {horario}
                   </div>
-                  
+
                   {profissionaisFiltrados.map(profissional => {
                     const agendamento = agendamentosHoje.find(
                       a => a.profissionalId === profissional.id && a.horaInicio === horario
@@ -494,11 +499,11 @@ export function Agenda() {
                     <label className="mb-2 block text-sm font-medium text-[#5c5650]">
                       Data *
                     </label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       className={`input ${formErrors.data ? 'input-error' : ''}`}
-                      value={formData.data} 
-                      onChange={e => setFormData(prev => ({ ...prev, data: e.target.value }))} 
+                      value={formData.data}
+                      onChange={e => setFormData(prev => ({ ...prev, data: e.target.value }))}
                     />
                     {formErrors.data && (
                       <div className="mt-1 flex items-center gap-1 text-xs text-[#e85d3f]">
@@ -511,11 +516,11 @@ export function Agenda() {
                     <label className="mb-2 block text-sm font-medium text-[#5c5650]">
                       Horário *
                     </label>
-                    <input 
-                      type="time" 
+                    <input
+                      type="time"
                       className={`input ${formErrors.horaInicio ? 'input-error' : ''}`}
-                      value={formData.horaInicio} 
-                      onChange={e => setFormData(prev => ({ ...prev, horaInicio: e.target.value }))} 
+                      value={formData.horaInicio}
+                      onChange={e => setFormData(prev => ({ ...prev, horaInicio: e.target.value }))}
                     />
                     {formErrors.horaInicio && (
                       <div className="mt-1 flex items-center gap-1 text-xs text-[#e85d3f]">
@@ -530,9 +535,9 @@ export function Agenda() {
                   <label className="mb-2 block text-sm font-medium text-[#5c5650]">
                     Profissional *
                   </label>
-                  <select 
+                  <select
                     className={`input ${formErrors.profissionalId ? 'input-error' : ''}`}
-                    value={formData.profissionalId} 
+                    value={formData.profissionalId}
                     onChange={e => setFormData(prev => ({ ...prev, profissionalId: e.target.value }))}
                   >
                     <option value="">Selecione um profissional...</option>
@@ -555,9 +560,9 @@ export function Agenda() {
                     <label className="mb-2 block text-sm font-medium text-[#5c5650]">
                       Tipo de Consulta
                     </label>
-                    <select 
-                      className="input" 
-                      value={formData.tipo} 
+                    <select
+                      className="input"
+                      value={formData.tipo}
                       onChange={e => setFormData(prev => ({ ...prev, tipo: e.target.value as Agendamento['tipo'] }))}
                     >
                       <option value="primeira-consulta">Primeira Consulta</option>
@@ -566,14 +571,14 @@ export function Agenda() {
                       <option value="teleconsulta">Teleconsulta</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="mb-2 block text-sm font-medium text-[#5c5650]">
                       Duração
                     </label>
-                    <select 
-                      className="input" 
-                      value={formData.duracao} 
+                    <select
+                      className="input"
+                      value={formData.duracao}
                       onChange={e => setFormData(prev => ({ ...prev, duracao: e.target.value }))}
                     >
                       <option value="30">30 minutos</option>
@@ -589,12 +594,12 @@ export function Agenda() {
                   <label className="mb-2 block text-sm font-medium text-[#5c5650]">
                     Sala (opcional)
                   </label>
-                  <input 
-                    type="text" 
-                    className="input" 
+                  <input
+                    type="text"
+                    className="input"
                     placeholder="Ex: Consultório 1, Sala de Fisioterapia..."
-                    value={formData.sala} 
-                    onChange={e => setFormData(prev => ({ ...prev, sala: e.target.value }))} 
+                    value={formData.sala}
+                    onChange={e => setFormData(prev => ({ ...prev, sala: e.target.value }))}
                   />
                 </div>
 
@@ -607,7 +612,7 @@ export function Agenda() {
                     className="input resize-none"
                     placeholder="Informações adicionais sobre a consulta..."
                     value={formData.observacoes}
-                    onChange={e => setFormData(prev => ({ ...prev, observacoes: e.target.value }))} 
+                    onChange={e => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
                   />
                 </div>
 
@@ -623,8 +628,8 @@ export function Agenda() {
                   >
                     Cancelar
                   </button>
-                  <motion.button 
-                    type="submit" 
+                  <motion.button
+                    type="submit"
                     className="btn-primary flex-1"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}

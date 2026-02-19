@@ -1,50 +1,94 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { pacientesMock } from '../types';
-import type { Paciente } from '../types';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { patientsApi, Patient } from '../api/patients';
 
 interface PacienteContextType {
-  pacientes: Paciente[];
-  pacienteSelecionado: Paciente | null;
-  addPaciente: (paciente: Omit<Paciente, 'id'>) => string;
-  updatePaciente: (id: string, paciente: Partial<Paciente>) => void;
-  deletePaciente: (id: string) => void;
+  pacientes: Patient[];
+  pacienteSelecionado: Patient | null;
+  loading: boolean;
+  error: string | null;
+  addPaciente: (paciente: Omit<Patient, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  updatePaciente: (id: string, paciente: Partial<Patient>) => Promise<void>;
+  deletePaciente: (id: string) => Promise<void>;
   selecionarPaciente: (id: string) => void;
   limparSelecao: () => void;
-  buscarPaciente: (id: string) => Paciente | undefined;
+  buscarPaciente: (id: string) => Patient | undefined;
+  refreshPacientes: () => Promise<void>;
 }
 
 const PacienteContext = createContext<PacienteContextType | undefined>(undefined);
 
 export function PacienteProvider({ children }: { children: ReactNode }) {
-  const [pacientes, setPacientes] = useState<Paciente[]>(pacientesMock);
-  const [pacienteSelecionado, setPacienteSelecionado] = useState<Paciente | null>(null);
+  const [pacientes, setPacientes] = useState<Patient[]>([]);
+  const [pacienteSelecionado, setPacienteSelecionado] = useState<Patient | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const addPaciente = (paciente: Omit<Paciente, 'id'>): string => {
-    const novoPaciente: Paciente = {
-      ...paciente,
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    };
-    setPacientes(prev => [...prev, novoPaciente]);
-    return novoPaciente.id;
-  };
-
-  const updatePaciente = (id: string, pacienteAtualizado: Partial<Paciente>) => {
-    setPacientes(prev =>
-      prev.map(p => (p.id === id ? { ...p, ...pacienteAtualizado } : p))
-    );
-    
-    // Atualizar seleção se for o paciente selecionado
-    if (pacienteSelecionado?.id === id) {
-      setPacienteSelecionado(prev => prev ? { ...prev, ...pacienteAtualizado } : null);
+  const refreshPacientes = async () => {
+    setLoading(true);
+    try {
+      const data = await patientsApi.getAll();
+      setPacientes(data);
+      setError(null);
+    } catch (err) {
+      console.error('Erro ao carregar pacientes:', err);
+      setError('Falha ao carregar lista de pacientes');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const deletePaciente = (id: string) => {
-    setPacientes(prev => prev.filter(p => p.id !== id));
-    
-    // Limpar seleção se for o paciente selecionado
-    if (pacienteSelecionado?.id === id) {
-      setPacienteSelecionado(null);
+  useEffect(() => {
+    refreshPacientes();
+  }, []);
+
+  const addPaciente = async (paciente: Omit<Patient, 'id' | 'created_at' | 'updated_at'>) => {
+    setLoading(true);
+    try {
+      const novoPaciente = await patientsApi.create(paciente);
+      setPacientes(prev => [...prev, novoPaciente]);
+    } catch (err) {
+      console.error('Erro ao criar paciente:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updatePaciente = async (id: string, pacienteAtualizado: Partial<Patient>) => {
+    setLoading(true);
+    try {
+      const updated = await patientsApi.update(id, pacienteAtualizado);
+      setPacientes(prev =>
+        prev.map(p => (p.id === id ? updated : p))
+      );
+
+      // Atualizar seleção se for o paciente selecionado
+      if (pacienteSelecionado?.id === id) {
+        setPacienteSelecionado(updated);
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar paciente:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deletePaciente = async (id: string) => {
+    setLoading(true);
+    try {
+      await patientsApi.delete(id);
+      setPacientes(prev => prev.filter(p => p.id !== id));
+
+      // Limpar seleção se for o paciente selecionado
+      if (pacienteSelecionado?.id === id) {
+        setPacienteSelecionado(null);
+      }
+    } catch (err) {
+      console.error('Erro ao excluir paciente:', err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,7 +101,7 @@ export function PacienteProvider({ children }: { children: ReactNode }) {
     setPacienteSelecionado(null);
   };
 
-  const buscarPaciente = (id: string): Paciente | undefined => {
+  const buscarPaciente = (id: string): Patient | undefined => {
     return pacientes.find(p => p.id === id);
   };
 
@@ -66,12 +110,15 @@ export function PacienteProvider({ children }: { children: ReactNode }) {
       value={{
         pacientes,
         pacienteSelecionado,
+        loading,
+        error,
         addPaciente,
         updatePaciente,
         deletePaciente,
         selecionarPaciente,
         limparSelecao,
         buscarPaciente,
+        refreshPacientes,
       }}
     >
       {children}
@@ -82,18 +129,7 @@ export function PacienteProvider({ children }: { children: ReactNode }) {
 export function usePacientes(): PacienteContextType {
   const context = useContext(PacienteContext);
   if (context === undefined) {
-    // Ao invés de lançar erro imediatamente, retorna um objeto vazio seguro
-    console.error('usePacientes deve ser usado dentro de PacienteProvider');
-    return {
-      pacientes: [],
-      pacienteSelecionado: null,
-      addPaciente: () => '',
-      updatePaciente: () => {},
-      deletePaciente: () => {},
-      selecionarPaciente: () => {},
-      limparSelecao: () => {},
-      buscarPaciente: () => undefined,
-    };
+    throw new Error('usePacientes deve ser usado dentro de PacienteProvider');
   }
   return context;
 }

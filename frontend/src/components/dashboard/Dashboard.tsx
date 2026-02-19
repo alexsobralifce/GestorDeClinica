@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { 
-  Calendar, 
-  Users, 
-  FileText, 
-  TrendingUp, 
+import {
+  Calendar,
+  Users,
+  FileText,
+  TrendingUp,
   Clock,
   AlertCircle,
   CheckCircle,
@@ -13,18 +13,46 @@ import {
 } from 'lucide-react';
 import { useAgendamentos } from '../../lib/AgendamentoContext';
 import { pacientesMock, profissionaisMock, statusConfig, especialidadeConfig } from '../../lib/types';
+import { useDevice } from '../../contexts/DeviceContext';
+import { DashboardMobile } from '../mobile/DashboardMobile';
 
 export function Dashboard() {
+  const { isMobile } = useDevice();
   const { agendamentos } = useAgendamentos();
-  
+
+  if (isMobile) {
+    return <DashboardMobile />;
+  }
+
   // Estatísticas
   const hoje = new Date().toISOString().split('T')[0];
   const agendamentosHoje = agendamentos.filter(a => a.data === hoje);
   const confirmados = agendamentosHoje.filter(a => a.status === 'confirmado').length;
   const pendentes = agendamentosHoje.filter(a => a.status === 'pendente').length;
-  
+
+  const hojeDate = new Date();
+  hojeDate.setHours(0, 0, 0, 0);
+
   const proximosAgendamentos = agendamentos
-    .filter(a => new Date(a.data) >= new Date())
+    .filter(a => {
+      const dataAgendamento = new Date(a.data);
+      // Ajusta timezone se necessário ou garante comparação correta de datas
+      // A string YYYY-MM-DD é interpretada como UTC, então usamos o timezone offset para garantir dia local correto
+      // Ou simplificamente comparamos apenas dia/mes/ano ou timestamps zerados
+      const dataAgendamentoLocal = new Date(
+        dataAgendamento.getUTCFullYear(),
+        dataAgendamento.getUTCMonth(),
+        dataAgendamento.getUTCDate()
+      );
+
+      return dataAgendamentoLocal >= hojeDate;
+    })
+    .sort((a, b) => {
+      // Ordenar por data e hora
+      const dateA = new Date(`${a.data}T${a.horaInicio}`);
+      const dateB = new Date(`${b.data}T${b.horaInicio}`);
+      return dateA.getTime() - dateB.getTime();
+    })
     .slice(0, 5);
 
   const stats = [
@@ -144,7 +172,7 @@ export function Dashboard() {
           transition={{ delay: 0.4 }}
           className="card lg:col-span-2"
         >
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex items-center justify-between pl-3">
             <div>
               <h3 className="text-xl font-semibold text-[#2b2926]">
                 Próximos Agendamentos
@@ -153,7 +181,7 @@ export function Dashboard() {
                 Agenda dos próximos dias
               </p>
             </div>
-            <Link to="/agenda" className="btn-ghost text-sm">
+            <Link to="/dashboard/agenda" className="btn-ghost text-sm">
               Ver agenda completa
             </Link>
           </div>
@@ -173,6 +201,14 @@ export function Dashboard() {
                   transition={{ delay: 0.5 + index * 0.05 }}
                   className="flex items-center gap-4 rounded-xl border border-[#e8e5df] p-4 transition-all hover:border-[#4a7c65] hover:shadow-md"
                 >
+                  {/* Avatar do Paciente */}
+                  <div
+                    className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                    style={{ backgroundColor: especialidade.cor }}
+                  >
+                    {paciente?.nome.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </div>
+
                   <div
                     className="h-12 w-1 rounded-full"
                     style={{ backgroundColor: especialidade.cor }}
@@ -313,7 +349,7 @@ export function Dashboard() {
         <h3 className="mb-6 text-xl font-semibold text-[#2b2926]">
           Status dos Profissionais
         </h3>
-        
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {profissionaisMock.map((profissional, index) => {
             const especialidade = especialidadeConfig[profissional.especialidade];
