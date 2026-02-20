@@ -20,6 +20,11 @@ export const professionalsApi = {
     return Array.isArray(response.data) ? response.data : [];
   },
 
+  getAdminAll: async (): Promise<Professional[]> => {
+    const response = await apiClient.get('/professionals/all');
+    return Array.isArray(response.data) ? response.data : [];
+  },
+
   getById: async (id: string): Promise<Professional> => {
     const response = await apiClient.get(`/professionals/${id}`);
     return response.data;

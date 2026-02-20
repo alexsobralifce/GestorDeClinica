@@ -18,6 +18,20 @@ app.get('/', async (c) => {
   }
 });
 
+// GET all professionals (including inactive)
+app.get('/all', async (c) => {
+  try {
+    const result = await pool.query(`
+      SELECT * FROM professionals 
+      ORDER BY active DESC, name ASC
+    `);
+    return c.json(result.rows);
+  } catch (error: any) {
+    console.error('Error fetching all professionals:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // GET professional by ID
 app.get('/:id', async (c) => {
   try {

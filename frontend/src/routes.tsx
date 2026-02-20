@@ -21,6 +21,7 @@ import { PlaceholderPage } from "./components/shared/PlaceholderPage";
 import { DashboardExecutivoPlaceholder } from "./components/bi/DashboardExecutivoPlaceholder";
 
 // Administrativo
+import { ProfissionaisPage } from "./components/administrativo/ProfissionaisPage";
 
 
 // Teste de Agendamento
@@ -32,7 +33,6 @@ import {
   Users as UsersIcon,
   TrendingUp,
   Sparkles,
-  UserPlus,
   Building2,
   Settings
 } from "lucide-react";
@@ -188,19 +188,7 @@ export const router = createBrowserRouter([
         element: <AdminGuard />,
         children: [
           {
-            path: "admin/profissionais", Component: () => <PlaceholderPage
-              title="Gestão de Profissionais"
-              description="Cadastro completo com vínculo, financeiro e permissões"
-              icon={UserPlus}
-              features={[
-                'Cadastro Multi-Step',
-                'Dados Profissionais',
-                'Vínculo e Financeiro',
-                'Configuração de Agenda',
-                'Controle de Permissões RBAC',
-                'Estatísticas Individuais'
-              ]}
-            />
+            path: "admin/profissionais", Component: ProfissionaisPage
           },
           {
             path: "admin/convenios", Component: () => <PlaceholderPage
