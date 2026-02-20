@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import fs from 'fs';
 import path from 'path';
-import pool from '../db/connection';
-import { authMiddleware } from '../middleware/auth';
-import { storage } from '../services/storage';
+import pool from '../db/connection.js';
+import { authMiddleware } from '../middleware/auth.js';
+import { storage } from '../services/storage.js';
 
 const app = new Hono();
 

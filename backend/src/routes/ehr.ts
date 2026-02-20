@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
-import pool from '../db/connection';
-import { authMiddleware } from '../middleware/auth';
-import { canViewEHR, canEditEHR } from '../middleware/abac';
+import pool from '../db/connection.js';
+import { authMiddleware } from '../middleware/auth.js';
+import { canViewEHR, canEditEHR } from '../middleware/abac.js';
 
 const app = new Hono();
 

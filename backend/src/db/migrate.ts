@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import pool from './connection';
+import pool from './connection.js';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);

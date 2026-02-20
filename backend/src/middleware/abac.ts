@@ -1,5 +1,5 @@
 import { Context } from 'hono';
-import pool from '../db/connection';
+import pool from '../db/connection.js';
 
 /**
  * Checks if the current user can view the EHR (Timeline) of a specific patient.

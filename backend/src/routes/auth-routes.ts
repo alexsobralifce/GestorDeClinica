@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import pool from '../db/connection';
+import pool from '../db/connection.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
