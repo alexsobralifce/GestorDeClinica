@@ -85,9 +85,16 @@ app.use('/*', serveStatic({
 
 // SPA fallback - verify if file exists first to avoid loops
 app.get('*', async (c) => {
-  // If it's an API request that wasn't handled, return 404 (handled by api routes or next notFound)
-  if (c.req.path.startsWith('/api')) {
+  const path = c.req.path;
+
+  // If it's an API request that wasn't handled, return 404
+  if (path.startsWith('/api')) {
     return c.json({ error: 'Not Found' }, 404);
+  }
+
+  // If it's a request for a static asset that wasn't found, return 404
+  if (path.match(/\.(ico|png|jpg|jpeg|svg|css|js|woff|woff2|ttf|eot|map)$/)) {
+    return c.text('Not Found', 404);
   }
 
   try {
