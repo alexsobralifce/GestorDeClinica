@@ -97,6 +97,7 @@ const MIME_TYPES: Record<string, string> = {
 
 app.get('*', async (c) => {
   const reqPath = c.req.path;
+  console.log(`[REQ] ${c.req.method} ${reqPath}`);
 
   // API routes that weren't matched return 404
   if (reqPath.startsWith('/api')) {
@@ -111,25 +112,34 @@ app.get('*', async (c) => {
       try {
         const content = await readFile(filePath);
         const mimeType = MIME_TYPES[ext.toLowerCase()] || 'application/octet-stream';
-        c.header('Content-Type', mimeType);
-        return c.body(content as unknown as string, 200);
-      } catch {
-        // fall through
+        console.log(`[STATIC] Serving ${reqPath} (${mimeType}, ${content.byteLength} bytes)`);
+        return new Response(content, {
+          status: 200,
+          headers: { 'Content-Type': mimeType }
+        });
+      } catch (err) {
+        console.error(`[STATIC] Error reading ${filePath}:`, err);
       }
     }
-    // Static asset not found
+    console.log(`[STATIC] Not found: ${reqPath}`);
     return c.text('Not Found', 404);
   }
 
   // SPA: serve index.html for all non-asset routes
   const indexPath = join(FRONTEND_DIST, 'index.html');
   if (existsSync(indexPath)) {
+    console.log(`[SPA] Serving index.html for ${reqPath}`);
     const html = await readFile(indexPath, 'utf8');
-    return c.html(html);
+    return new Response(html, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=UTF-8' }
+    });
   }
 
+  console.error(`[ERROR] Frontend not found at ${FRONTEND_DIST}`);
   return c.text('Frontend not built. Run npm run build in the frontend directory.', 503);
 });
+
 
 // 404 handler for API
 app.notFound((c) => {
