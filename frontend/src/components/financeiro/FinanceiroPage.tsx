@@ -276,9 +276,9 @@ export function FinanceiroPage() {
         financialApi.getSummary({ start_date: start, end_date: end }),
         apiClient.get('/categories').then(r => r.data),
       ]);
-      setTransactions(txList);
+      setTransactions(Array.isArray(txList) ? txList : []);
       setSummary(sumData);
-      setCategories(catData);
+      setCategories(Array.isArray(catData) ? catData : []);
     } catch (e) { /* show empty state */ }
     finally { setLoading(false); }
   }, [periodo, typeFilter]);

@@ -44,9 +44,9 @@ export function AgendaProfissional() {
         axios.get(`${API_URL}/patients`, { headers }),
         axios.get(`${API_URL}/professionals`, { headers }),
       ]);
-      setAgendamentos(appRes.data);
-      setPacientes(pacRes.data);
-      setProfissionais(profRes.data);
+      setAgendamentos(Array.isArray(appRes.data) ? appRes.data : []);
+      setPacientes(Array.isArray(pacRes.data) ? pacRes.data : []);
+      setProfissionais(Array.isArray(profRes.data) ? profRes.data : []);
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
     }

@@ -42,7 +42,7 @@ export interface FinancialSummary {
 export const financialApi = {
   getAll: async (filters?: FinancialFilters): Promise<FinancialTransaction[]> => {
     const response = await apiClient.get('/financial', { params: filters });
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   getSummary: async (filters?: { start_date?: string; end_date?: string }): Promise<FinancialSummary> => {

@@ -114,8 +114,8 @@ export function NovoAgendamentoModal({ isOpen, onClose, onSuccess }: NovoAgendam
       axios.get(`${API_URL}/professionals`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
     ])
       .then(([pRes, prRes]) => {
-        setPacientes(pRes.data);
-        setProfissionais(prRes.data.filter((p: Profissional) => p));
+        setPacientes(Array.isArray(pRes.data) ? pRes.data : []);
+        setProfissionais(Array.isArray(prRes.data) ? prRes.data.filter((p: Profissional) => p) : []);
       })
       .catch(() => setError('Erro ao carregar dados. Tente novamente.'))
       .finally(() => setLoadingData(false));

@@ -17,7 +17,7 @@ export interface Professional {
 export const professionalsApi = {
   getAll: async (): Promise<Professional[]> => {
     const response = await apiClient.get('/professionals');
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   getById: async (id: string): Promise<Professional> => {

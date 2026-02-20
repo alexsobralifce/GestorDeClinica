@@ -21,7 +21,7 @@ export interface Patient {
 export const patientsApi = {
   getAll: async (): Promise<Patient[]> => {
     const response = await apiClient.get('/patients');
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   getById: async (id: string): Promise<Patient> => {
