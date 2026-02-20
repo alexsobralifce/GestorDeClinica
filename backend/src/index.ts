@@ -75,6 +75,9 @@ app.route('/api/documents', documentsRouter);
 
 // Serve frontend static files + SPA fallback
 const FRONTEND_DIST = resolve('../frontend/dist');
+console.log(`📁 Frontend dist path: ${FRONTEND_DIST}`);
+console.log(`📁 Frontend dist exists: ${existsSync(FRONTEND_DIST)}`);
+console.log(`📁 index.html exists: ${existsSync(join(FRONTEND_DIST, 'index.html'))}`);
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=UTF-8',
   '.js': 'application/javascript',
