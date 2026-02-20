@@ -3,6 +3,9 @@ import { cors } from 'hono/cors';
 import dotenv from 'dotenv';
 import { createServer } from 'node:http';
 import { getRequestListener } from '@hono/node-server';
+import { readFile } from 'node:fs/promises';
+import { resolve, extname, join } from 'node:path';
+import { existsSync } from 'node:fs';
 import bookingRouter from './routes/booking.js';
 import patientsRouter from './routes/patients.js';
 import professionalsRouter from './routes/professionals.js';
@@ -70,39 +73,59 @@ app.route('/api', ehrRouter);
 app.route('/api/files', filesRouter);
 app.route('/api/documents', documentsRouter);
 
-// Serve static files in production
-import { serveStatic } from '@hono/node-server/serve-static';
-import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+// Serve frontend static files + SPA fallback
+const FRONTEND_DIST = resolve('../frontend/dist');
+const MIME_TYPES: Record<string, string> = {
+  '.html': 'text/html; charset=UTF-8',
+  '.js': 'application/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.eot': 'application/vnd.ms-fontobject',
+  '.map': 'application/json',
+};
 
-// API routes must be defined before static files
-// ... (API routes are already defined above)
-
-// Serve frontend static files
-app.use('/*', serveStatic({
-  root: resolve('../frontend/dist')
-}));
-
-// SPA fallback - verify if file exists first to avoid loops
 app.get('*', async (c) => {
-  const path = c.req.path;
+  const reqPath = c.req.path;
 
-  // If it's an API request that wasn't handled, return 404
-  if (path.startsWith('/api')) {
+  // API routes that weren't matched return 404
+  if (reqPath.startsWith('/api')) {
     return c.json({ error: 'Not Found' }, 404);
   }
 
-  // If it's a request for a static asset that wasn't found, return 404
-  if (path.match(/\.(ico|png|jpg|jpeg|svg|css|js|woff|woff2|ttf|eot|map)$/)) {
+  // Try to serve a static file first
+  const ext = extname(reqPath);
+  if (ext) {
+    const filePath = join(FRONTEND_DIST, reqPath);
+    if (existsSync(filePath)) {
+      try {
+        const content = await readFile(filePath);
+        const mimeType = MIME_TYPES[ext.toLowerCase()] || 'application/octet-stream';
+        c.header('Content-Type', mimeType);
+        return c.body(content as unknown as string, 200);
+      } catch {
+        // fall through
+      }
+    }
+    // Static asset not found
     return c.text('Not Found', 404);
   }
 
-  try {
-    const indexHtml = await readFile(resolve('../frontend/dist/index.html'));
-    return c.html(indexHtml.toString());
-  } catch (e) {
-    return c.text('Frontend not built or found. Run `npm run build` in frontend directory.', 404);
+  // SPA: serve index.html for all non-asset routes
+  const indexPath = join(FRONTEND_DIST, 'index.html');
+  if (existsSync(indexPath)) {
+    const html = await readFile(indexPath, 'utf8');
+    return c.html(html);
   }
+
+  return c.text('Frontend not built. Run npm run build in the frontend directory.', 503);
 });
 
 // 404 handler for API
