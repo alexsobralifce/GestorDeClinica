@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, UserPlus, Power, PowerOff, Edit2, AlertCircle } from 'lucide-react';
+import { Search, Plus, UserPlus, Power, PowerOff, Edit2, AlertCircle, Clock } from 'lucide-react';
 import { professionalsApi, Professional } from '../../lib/api/professionals';
 import { especialidadeConfig } from '../../lib/types';
 import { ProfissionalModal } from './ProfissionalModal';
@@ -180,6 +180,29 @@ export function ProfissionaisPage() {
                         {prof.email}
                       </div>
                     )}
+                    {/* Horários de Atendimento */}
+                    <div className="pt-2">
+                      <div className="flex items-center gap-2 mb-2 text-sm text-[#2b2926] font-semibold">
+                        <Clock className="w-4 h-4 text-[#4a7c65]" />
+                        Horários de Atendimento
+                      </div>
+                      {prof.schedule ? (
+                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                          {Object.entries(prof.schedule as Record<string, any>).map(([dia, cfg]) => {
+                            if (!cfg.ativo) return null;
+                            const diaLabel = dia.charAt(0).toUpperCase() + dia.slice(1, 4);
+                            return (
+                              <div key={dia} className="flex justify-between items-center bg-gray-50 px-2 py-1 rounded">
+                                <span className="font-medium text-[#7a7369]">{diaLabel}</span>
+                                <span className="text-[#5c5650]">{cfg.inicio} às {cfg.fim}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-[#7a7369] italic">Horários não configurados.</p>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex gap-2 pt-4 border-t border-[#e8e5df]">

@@ -3,6 +3,7 @@ import { X, ChevronLeft, ChevronRight, Check, User, Briefcase, Calendar, Clock }
 import { motion } from 'framer-motion';
 import { Professional, professionalsApi } from '../../lib/api/professionals';
 import { especialidadeConfig } from '../../lib/types';
+import { maskPhone } from '../../utils/masks';
 
 const CORES = [
   '#4a7c65', '#3b82f6', '#8b5cf6', '#f59e0b', '#e85d3f',
@@ -209,7 +210,7 @@ export function ProfissionalModal({ isOpen, onClose, onSuccess, profissional }: 
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
                     className="input-field w-full"
                     placeholder="(11) 98765-4321"
                   />

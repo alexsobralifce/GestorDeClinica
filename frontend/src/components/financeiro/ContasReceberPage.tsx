@@ -8,6 +8,7 @@ import { accountsApi, AccountReceivable, AccountsDashboard } from '../../lib/api
 import { useDevice } from '../../contexts/DeviceContext';
 import { FinanceiroMobile } from '../mobile/FinanceiroMobile';
 import { FluxoCaixaProvider } from '../../lib/contexts/FluxoCaixaContext';
+import { maskPhone } from '../../utils/masks';
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   pending: { label: 'Pendente', className: 'bg-amber-100 text-amber-800' },
@@ -145,7 +146,7 @@ function NovaContaModal({ onClose, onSaved }: { onClose: () => void; onSaved: ()
             <div>
               <label className="field-label">Telefone</label>
               <input type="text" className="input-field" placeholder="(00) 00000-0000"
-                value={form.debtor_phone} onChange={e => setForm(f => ({ ...f, debtor_phone: e.target.value }))} />
+                value={form.debtor_phone} onChange={e => setForm(f => ({ ...f, debtor_phone: maskPhone(e.target.value) }))} />
             </div>
             <div className="col-span-2">
               <label className="field-label">Observações</label>

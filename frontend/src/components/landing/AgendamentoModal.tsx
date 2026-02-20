@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar as CalendarIcon, Clock, Check, User, ChevronRight, MapPin, AlertCircle } from 'lucide-react';
 import { bookingApi, PublicProfessional } from '../../lib/api/booking';
+import { maskCPF, maskPhone } from '../../utils/masks';
 
 // Steps: 0=Patient Info, 1=Select Slot, 2=Confirmation
 
@@ -200,7 +201,7 @@ export function AgendamentoModal({ onClose }: AgendamentoModalProps) {
                         <label className="text-sm font-medium text-[#5c5650]">CPF *</label>
                         <input type="text" className="w-full px-4 py-3 rounded-xl border border-[#e8e5df] focus:border-[#4a7c65] focus:ring-1 focus:ring-[#4a7c65] outline-none transition-colors"
                           placeholder="000.000.000-00"
-                          value={patient.cpf} onChange={e => setPatient({ ...patient, cpf: e.target.value })} />
+                          value={patient.cpf} onChange={e => setPatient({ ...patient, cpf: maskCPF(e.target.value) })} />
                       </div>
                       <div className="space-y-1">
                         <label className="text-sm font-medium text-[#5c5650]">E-mail *</label>
@@ -212,7 +213,7 @@ export function AgendamentoModal({ onClose }: AgendamentoModalProps) {
                         <label className="text-sm font-medium text-[#5c5650]">WhatsApp *</label>
                         <input type="text" className="w-full px-4 py-3 rounded-xl border border-[#e8e5df] focus:border-[#4a7c65] focus:ring-1 focus:ring-[#4a7c65] outline-none transition-colors"
                           placeholder="(00) 00000-0000"
-                          value={patient.phone} onChange={e => setPatient({ ...patient, phone: e.target.value })} />
+                          value={patient.phone} onChange={e => setPatient({ ...patient, phone: maskPhone(e.target.value) })} />
                       </div>
                     </div>
                   </div>
