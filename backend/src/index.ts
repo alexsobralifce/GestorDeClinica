@@ -121,8 +121,8 @@ const server = createServer(listener);
 // Keep the process alive
 const keepAlive = setInterval(() => { }, 1000 * 60 * 60);
 
-server.listen(port, () => {
-  console.log(`✅ Server running on http://localhost:${port}`);
+server.listen(port, '0.0.0.0', () => {
+  console.log(`✅ Server running on port ${port} (0.0.0.0)`);
 });
 
 server.on('error', (err: any) => {
