@@ -161,14 +161,32 @@ const port = parseInt(process.env.PORT || process.env.API_PORT || '3001');
 
 // Create HTTP server: static files via Node.js, API via Hono
 const server = createServer(async (req, res) => {
+  const start = Date.now();
+  const method = req.method || 'GET';
+  const url = req.url || '/';
+  console.log(`[HTTP] --> ${method} ${url}`);
+
+  // Log when response finishes
+  res.on('finish', () => {
+    const ms = Date.now() - start;
+    console.log(`[HTTP] <-- ${method} ${url} ${res.statusCode} (${ms}ms)`);
+  });
+
+  // Log if connection is closed before response sent
+  res.on('close', () => {
+    if (!res.writableFinished) {
+      console.error(`[HTTP] !!! ${method} ${url} - connection closed before response sent (${Date.now() - start}ms)`);
+    }
+  });
+
   try {
     const handled = await serveStatic(req, res);
     if (!handled) {
-      // Pass to Hono
+      console.log(`[HTTP] --> Hono: ${method} ${url}`);
       return honoListener(req, res);
     }
   } catch (err) {
-    console.error('[SERVER] Unhandled error:', err);
+    console.error(`[HTTP] !!! Error handling ${method} ${url}:`, err);
     if (!res.headersSent) {
       res.writeHead(500, { 'Content-Type': 'text/plain' });
       res.end('Internal Server Error');
