@@ -3,9 +3,7 @@ import { X, ChevronLeft, ChevronRight, Check, Calendar, Clock, User, RefreshCw, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, startOfDay, isBefore, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import apiClient from '../../lib/api/client';
 
 interface NovoAgendamentoModalProps {
   isOpen: boolean;
@@ -110,8 +108,8 @@ export function NovoAgendamentoModal({ isOpen, onClose, onSuccess }: NovoAgendam
     if (!isOpen) return;
     setLoadingData(true);
     Promise.all([
-      axios.get(`${API_URL}/patients`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
-      axios.get(`${API_URL}/professionals`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
+      apiClient.get('/patients'),
+      apiClient.get('/professionals'),
     ])
       .then(([pRes, prRes]) => {
         setPacientes(Array.isArray(pRes.data) ? pRes.data : []);
@@ -162,14 +160,12 @@ export function NovoAgendamentoModal({ isOpen, onClose, onSuccess }: NovoAgendam
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError(null);
-    const token = localStorage.getItem('token');
-    const headers = { Authorization: `Bearer ${token}` };
     const endTime = calcEndTime(formData.horario!, formData.duracao!);
 
     try {
       if (formData.recorrente && (formData.datasGeradas?.length ?? 0) > 1) {
         // Agendamento em lote
-        await axios.post(`${API_URL}/appointments/batch`, {
+        await apiClient.post('/appointments/batch', {
           patient_id: formData.pacienteId,
           professional_id: formData.profissionalId,
           start_time: formData.horario,
@@ -178,13 +174,13 @@ export function NovoAgendamentoModal({ isOpen, onClose, onSuccess }: NovoAgendam
           specialty: formData.especialidade,
           notes: formData.observacoes,
           dates: formData.datasGeradas,
-        }, { headers });
+        });
       } else {
         // Agendamento único
         const dataSingle = formData.recorrente && formData.datasGeradas?.length
           ? formData.datasGeradas[0]
           : format(formData.data!, 'yyyy-MM-dd');
-        await axios.post(`${API_URL}/appointments`, {
+        await apiClient.post('/appointments', {
           patient_id: formData.pacienteId,
           professional_id: formData.profissionalId,
           appointment_date: dataSingle,
@@ -194,7 +190,7 @@ export function NovoAgendamentoModal({ isOpen, onClose, onSuccess }: NovoAgendam
           specialty: formData.especialidade,
           notes: formData.observacoes,
           status: 'scheduled',
-        }, { headers });
+        });
       }
       setSuccess(true);
       setTimeout(() => {

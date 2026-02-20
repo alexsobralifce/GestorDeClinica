@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import apiClient from '../../lib/api/client';
 import {
   ChevronLeft,
   ChevronRight,
@@ -20,7 +20,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { statusConfig, especialidadeConfig } from '../../lib/types';
 import { NovoAgendamentoModal } from './NovoAgendamentoModal';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
 
 export function AgendaProfissional() {
   const { isDark } = useTheme();
@@ -38,11 +38,10 @@ export function AgendaProfissional() {
 
   const fetchData = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
       const [appRes, pacRes, profRes] = await Promise.all([
-        axios.get(`${API_URL}/appointments`, { headers }),
-        axios.get(`${API_URL}/patients`, { headers }),
-        axios.get(`${API_URL}/professionals`, { headers }),
+        apiClient.get('/appointments'),
+        apiClient.get('/patients'),
+        apiClient.get('/professionals'),
       ]);
       setAgendamentos(Array.isArray(appRes.data) ? appRes.data : []);
       setPacientes(Array.isArray(pacRes.data) ? pacRes.data : []);
