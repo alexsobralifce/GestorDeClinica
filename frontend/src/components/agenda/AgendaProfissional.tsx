@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import axios from 'axios';
 import {
   ChevronLeft,
   ChevronRight,
@@ -7,25 +8,21 @@ import {
   Clock,
   Plus,
   Search,
-  Filter,
-  MapPin,
-  Check,
-  X,
-  Video,
-  Users,
   Grid3x3,
   List,
   Download,
   Printer,
   MoreVertical,
+  MapPin,
+  Check,
 } from 'lucide-react';
-import { useAgendamentos } from '../../lib/AgendamentoContext';
 import { useTheme } from '../../hooks/useTheme';
-import { pacientesMock, profissionaisMock, statusConfig, especialidadeConfig } from '../../lib/types';
-import type { Agendamento } from '../../lib/types';
+import { statusConfig, especialidadeConfig } from '../../lib/types';
+import { NovoAgendamentoModal } from './NovoAgendamentoModal';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export function AgendaProfissional() {
-  const { agendamentos } = useAgendamentos();
   const { isDark } = useTheme();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'timeline' | 'grid'>('timeline');
@@ -34,6 +31,30 @@ export function AgendaProfissional() {
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [showNovoAgendamento, setShowNovoAgendamento] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const [agendamentos, setAgendamentos] = useState<any[]>([]);
+  const [pacientes, setPacientes] = useState<any[]>([]);
+  const [profissionais, setProfissionais] = useState<any[]>([]);
+
+  const fetchData = async () => {
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const [appRes, pacRes, profRes] = await Promise.all([
+        axios.get(`${API_URL}/appointments`, { headers }),
+        axios.get(`${API_URL}/patients`, { headers }),
+        axios.get(`${API_URL}/professionals`, { headers }),
+      ]);
+      setAgendamentos(appRes.data);
+      setPacientes(pacRes.data);
+      setProfissionais(profRes.data);
+    } catch (err) {
+      console.error('Erro ao carregar dados:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('pt-BR', {
@@ -64,25 +85,36 @@ export function AgendaProfissional() {
   });
 
   // Filtrar agendamentos
-  const agendamentosFiltrados = agendamentos.filter(agendamento => {
-    if (agendamento.data !== selectedDateStr) return false;
+  const agendamentosFiltrados = agendamentos.filter((agendamento: any) => {
+    const dataAgendamento = agendamento.appointment_date?.split('T')[0];
+    if (dataAgendamento !== selectedDateStr) return false;
 
-    const profissional = profissionaisMock.find(p => p.id === agendamento.profissionalId);
-    const paciente = pacientesMock.find(p => p.id === agendamento.pacienteId);
+    const profissional = profissionais.find((p: any) => p.id === agendamento.professional_id);
+    const paciente = pacientes.find((p: any) => p.id === agendamento.patient_id);
 
-    if (selectedEspecialidade && profissional?.especialidade !== selectedEspecialidade) {
+    if (selectedEspecialidade && profissional?.specialty !== especialidadeConfig[selectedEspecialidade as keyof typeof especialidadeConfig]?.label) {
       return false;
     }
 
-    if (selectedProfissional && agendamento.profissionalId !== selectedProfissional) {
+    if (selectedProfissional && agendamento.professional_id !== selectedProfissional) {
       return false;
     }
 
-    if (selectedStatus && agendamento.status !== selectedStatus) {
+    // Status mapping para filtro
+    const statusMap: Record<string, string> = {
+      'scheduled': 'pendente',
+      'confirmed': 'confirmado',
+      'completed': 'realizado',
+      'cancelled': 'cancelado',
+      'no_show': 'faltou'
+    };
+    const agendamentoStatusKey = statusMap[agendamento.status] || 'pendente';
+
+    if (selectedStatus && agendamentoStatusKey !== selectedStatus) {
       return false;
     }
 
-    if (searchTerm && !paciente?.nome.toLowerCase().includes(searchTerm.toLowerCase())) {
+    if (searchTerm && !paciente?.name.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
 
@@ -90,21 +122,28 @@ export function AgendaProfissional() {
   });
 
   // Agrupar por profissional
-  const agendamentosPorProfissional = profissionaisMock.reduce((acc, prof) => {
+  const agendamentosPorProfissional = profissionais.reduce((acc: any, prof: any) => {
     if (selectedProfissional && prof.id !== selectedProfissional) return acc;
-    if (selectedEspecialidade && prof.especialidade !== selectedEspecialidade) return acc;
+    if (selectedEspecialidade && prof.specialty !== especialidadeConfig[selectedEspecialidade as keyof typeof especialidadeConfig]?.label) return acc;
 
-    acc[prof.id] = agendamentosFiltrados.filter(a => a.profissionalId === prof.id);
+    acc[prof.id] = agendamentosFiltrados.filter((a: any) => a.professional_id === prof.id);
     return acc;
-  }, {} as Record<string, Agendamento[]>);
+  }, {} as Record<string, any[]>);
 
   const profissionaisVisiveis = Object.keys(agendamentosPorProfissional);
 
   // Estatísticas do dia
   const totalAgendamentos = agendamentosFiltrados.length;
-  const confirmados = agendamentosFiltrados.filter(a => a.status === 'confirmado').length;
-  const pendentes = agendamentosFiltrados.filter(a => a.status === 'pendente').length;
-  const concluidos = agendamentosFiltrados.filter(a => a.status === 'concluido').length;
+  const statusMap: Record<string, string> = {
+    'scheduled': 'pendente',
+    'confirmed': 'confirmado',
+    'completed': 'realizado',
+    'cancelled': 'cancelado',
+    'no_show': 'faltou'
+  };
+  const confirmados = agendamentosFiltrados.filter((a: any) => statusMap[a.status] === 'confirmado').length;
+  const pendentes = agendamentosFiltrados.filter((a: any) => statusMap[a.status] === 'pendente' || !statusMap[a.status]).length;
+  const concluidos = agendamentosFiltrados.filter((a: any) => statusMap[a.status] === 'realizado').length;
 
   const calcularPosicao = (horaInicio: string, duracao: number) => {
     const [hora, minuto] = horaInicio.split(':').map(Number);
@@ -354,20 +393,21 @@ export function AgendaProfissional() {
                   <p className="text-sm font-semibold text-[#5c5650]">Horário</p>
                 </div>
                 {profissionaisVisiveis.map(profId => {
-                  const prof = profissionaisMock.find(p => p.id === profId)!;
-                  const config = especialidadeConfig[prof.especialidade];
+                  const prof = profissionais.find((p: any) => p.id === profId)!;
+                  const especialidadeKey = Object.entries(especialidadeConfig).find(([, cfg]) => cfg.label === prof.specialty)?.[0] || 'fisioterapia';
+                  const config = especialidadeConfig[especialidadeKey as keyof typeof especialidadeConfig];
                   return (
                     <div key={profId} className="p-4 border-r border-[#e8e5df] last:border-r-0">
                       <div className="flex items-center gap-2">
                         <div
                           className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold"
-                          style={{ backgroundColor: config.cor }}
+                          style={{ backgroundColor: prof.color || config.cor }}
                         >
-                          {prof.nome.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          {prof.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-[#2b2926]">{prof.nome.split(' ')[0]}</p>
-                          <p className="text-xs text-[#7a7369]">{config.label}</p>
+                          <p className="text-sm font-semibold text-[#2b2926]">{prof.name.split(' ')[0]}</p>
+                          <p className="text-xs text-[#7a7369]">{prof.specialty || config.label}</p>
                         </div>
                       </div>
                     </div>
@@ -393,8 +433,9 @@ export function AgendaProfissional() {
                   {/* Colunas de Profissionais */}
                   {profissionaisVisiveis.map(profId => {
                     const profAgendamentos = agendamentosPorProfissional[profId] || [];
-                    const prof = profissionaisMock.find(p => p.id === profId)!;
-                    const config = especialidadeConfig[prof.especialidade];
+                    const prof = profissionais.find((p: any) => p.id === profId)!;
+                    const especialidadeKey = Object.entries(especialidadeConfig).find(([, cfg]) => cfg.label === prof.specialty)?.[0] || 'fisioterapia';
+                    const config = especialidadeConfig[especialidadeKey as keyof typeof especialidadeConfig];
 
                     return (
                       <div key={profId} className="relative border-r border-[#e8e5df] last:border-r-0">
@@ -407,10 +448,21 @@ export function AgendaProfissional() {
                         ))}
 
                         {/* Agendamentos Posicionados */}
-                        {profAgendamentos.map((agendamento, index) => {
-                          const paciente = pacientesMock.find(p => p.id === agendamento.pacienteId)!;
-                          const statusCfg = statusConfig[agendamento.status];
-                          const { top, height } = calcularPosicao(agendamento.horaInicio, agendamento.duracao);
+                        {profAgendamentos.map((agendamento: any, index: number) => {
+                          const paciente = pacientes.find((p: any) => p.id === agendamento.patient_id)!;
+                          const statusMap: Record<string, string> = {
+                            'scheduled': 'pendente',
+                            'confirmed': 'confirmado',
+                            'completed': 'realizado',
+                            'cancelled': 'cancelado',
+                            'no_show': 'faltou'
+                          };
+                          const statusKey = statusMap[agendamento.status] || 'pendente';
+                          const statusCfg = statusConfig[statusKey as keyof typeof statusConfig];
+
+                          // Ajuste de "start_time" da API que vem como HH:MM:SS
+                          const horaInicioFormatada = agendamento.start_time?.substring(0, 5) || '12:00';
+                          const { top, height } = calcularPosicao(horaInicioFormatada, agendamento.duration || 60);
 
                           return (
                             <motion.div
@@ -432,10 +484,10 @@ export function AgendaProfissional() {
                               <div className="flex flex-col h-full justify-between">
                                 <div>
                                   <p className="text-sm font-bold text-[#2b2926] dark:text-[#e8e8ef] truncate">
-                                    {paciente.nome}
+                                    {paciente.name}
                                   </p>
                                   <p className="text-xs text-[#5c5650] dark:text-[#a8a199] truncate">
-                                    {agendamento.horaInicio} - {agendamento.tipo.replace('-', ' ')}
+                                    {horaInicioFormatada} - {(agendamento.specialty || 'Sessão')}
                                   </p>
                                 </div>
                                 <div className="flex items-center justify-between mt-1">
@@ -448,9 +500,6 @@ export function AgendaProfissional() {
                                   >
                                     {statusCfg.label}
                                   </span>
-                                  {agendamento.tipo === 'telemedicina' && (
-                                    <Video className="h-3 w-3 text-[#3b82f6]" />
-                                  )}
                                 </div>
                               </div>
                               <div className="absolute inset-0 bg-[#4a7c65]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -492,11 +541,25 @@ export function AgendaProfissional() {
               </div>
             </div>
           ) : (
-            agendamentosFiltrados.map((agendamento, index) => {
-              const paciente = pacientesMock.find(p => p.id === agendamento.pacienteId)!;
-              const profissional = profissionaisMock.find(p => p.id === agendamento.profissionalId)!;
-              const statusCfg = statusConfig[agendamento.status];
-              const espConfig = especialidadeConfig[profissional.especialidade];
+            agendamentosFiltrados.map((agendamento: any, index: number) => {
+              const paciente = pacientes.find((p: any) => p.id === agendamento.patient_id);
+              const profissional = profissionais.find((p: any) => p.id === agendamento.professional_id);
+              if (!paciente || !profissional) return null;
+
+              const statusMap: Record<string, string> = {
+                'scheduled': 'pendente',
+                'confirmed': 'confirmado',
+                'completed': 'realizado',
+                'cancelled': 'cancelado',
+                'no_show': 'faltou'
+              };
+              const statusKey = statusMap[agendamento.status] || 'pendente';
+              const statusCfg = statusConfig[statusKey as keyof typeof statusConfig];
+
+              const especialidadeKey = Object.entries(especialidadeConfig).find(([, cfg]) => cfg.label === profissional.specialty)?.[0] || 'fisioterapia';
+              const espConfig = especialidadeConfig[especialidadeKey as keyof typeof especialidadeConfig];
+
+              const horaInicioFormatada = agendamento.start_time?.substring(0, 5) || '12:00';
 
               return (
                 <motion.div
@@ -514,11 +577,11 @@ export function AgendaProfissional() {
                           className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold"
                           style={{ backgroundColor: espConfig.cor }}
                         >
-                          {paciente.nome.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          {paciente.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                         </div>
                         <div>
-                          <p className="font-bold text-[#2b2926] dark:text-[#e8e8ef]">{paciente.nome}</p>
-                          <p className="text-sm text-[#7a7369] dark:text-[#a8a199]">{profissional.nome}</p>
+                          <p className="font-bold text-[#2b2926] dark:text-[#e8e8ef]">{paciente.name}</p>
+                          <p className="text-sm text-[#7a7369] dark:text-[#a8a199]">{profissional.name}</p>
                         </div>
                       </div>
                       <button className="btn-icon-sm opacity-0 group-hover:opacity-100 transition-opacity">
@@ -530,18 +593,12 @@ export function AgendaProfissional() {
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-sm text-[#5c5650] dark:text-[#b0b0be]">
                         <Clock className="h-4 w-4" />
-                        <span>{agendamento.horaInicio} - {agendamento.duracao} minutos</span>
+                        <span>{horaInicioFormatada} - {agendamento.duration} minutos</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-[#5c5650] dark:text-[#b0b0be]">
                         <MapPin className="h-4 w-4" />
-                        <span>Sala {agendamento.sala}</span>
+                        <span>Sala {agendamento.notes || '101'}</span>
                       </div>
-                      {agendamento.tipo === 'telemedicina' && (
-                        <div className="flex items-center gap-2 text-sm text-[#3b82f6]">
-                          <Video className="h-4 w-4" />
-                          <span>Telemedicina</span>
-                        </div>
-                      )}
                     </div>
 
                     {/* Footer */}
@@ -576,109 +633,14 @@ export function AgendaProfissional() {
       )}
 
       {/* Modal Novo Agendamento */}
-      <AnimatePresence>
-        {showNovoAgendamento && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-[#2b2926]/50 backdrop-blur-sm"
-              onClick={() => setShowNovoAgendamento(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed left-1/2 top-1/2 z-50 w-full max-w-3xl -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
-            >
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-[#2b2926]">Novo Agendamento</h2>
-                <button onClick={() => setShowNovoAgendamento(false)} className="btn-icon">
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-
-              <form className="form-container p-0">
-                <div className="form-grid">
-                  <div className="field-group">
-                    <label className="field-label">Paciente</label>
-                    <select className="input-field">
-                      <option value="">Selecione o paciente</option>
-                      {pacientesMock.map(p => (
-                        <option key={p.id} value={p.id}>{p.nome}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="field-group">
-                    <label className="field-label">Profissional</label>
-                    <select className="input-field">
-                      <option value="">Selecione o profissional</option>
-                      {profissionaisMock.map(p => (
-                        <option key={p.id} value={p.id}>{p.nome}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="field-group">
-                    <label className="field-label">Data</label>
-                    <input type="date" className="input-field" />
-                  </div>
-
-                  <div className="field-group">
-                    <label className="field-label">Horário</label>
-                    <input type="time" className="input-field" />
-                  </div>
-
-                  <div className="field-group">
-                    <label className="field-label">Duração (min)</label>
-                    <select className="input-field">
-                      <option value="30">30 minutos</option>
-                      <option value="45">45 minutos</option>
-                      <option value="60">60 minutos</option>
-                      <option value="90">90 minutos</option>
-                    </select>
-                  </div>
-
-                  <div className="field-group">
-                    <label className="field-label">Sala</label>
-                    <input type="text" className="input-field" placeholder="Ex: 101" />
-                  </div>
-
-                  <div className="field-group field-span-2">
-                    <label className="field-label">Tipo de Consulta</label>
-                    <select className="input-field">
-                      <option value="primeira-consulta">Primeira Consulta</option>
-                      <option value="retorno">Retorno</option>
-                      <option value="emergencia">Emergência</option>
-                      <option value="telemedicina">Telemedicina</option>
-                    </select>
-                  </div>
-
-                  <div className="field-group field-span-2">
-                    <label className="field-label">Observações (opcional)</label>
-                    <textarea className="input-field" rows={3} placeholder="Adicione observações..."></textarea>
-                  </div>
-                </div>
-
-                <div className="form-submit flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowNovoAgendamento(false)}
-                    className="btn-ghost flex-1"
-                  >
-                    Cancelar
-                  </button>
-                  <button type="submit" className="btn-primary flex-1">
-                    Agendar Consulta
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <NovoAgendamentoModal
+        isOpen={showNovoAgendamento}
+        onClose={() => setShowNovoAgendamento(false)}
+        onSuccess={() => {
+          // TODO: Mudar AgendaProfissional para consumir dados reais no futuro
+          window.location.reload(); // Provisório para forçar o recarregamento na timeline
+        }}
+      />
     </div>
   );
 }

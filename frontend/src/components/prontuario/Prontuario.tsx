@@ -751,7 +751,7 @@ export function Prontuario() {
                       <button
                         type="button"
                         onClick={() => setShowNovoRegistro(false)}
-                        className="btn-ghost flex-1"
+                        className="flex-1 py-3 bg-white border-2 border-[#e8e5df] rounded-xl font-semibold text-[#5c5650] hover:bg-[#f5f3ef] hover:border-[#d4cfc5] transition-all shadow-sm"
                         disabled={submitting}
                       >
                         Cancelar

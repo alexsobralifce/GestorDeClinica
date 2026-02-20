@@ -230,7 +230,7 @@ function NovaTransacaoModal({ onClose, onSaved, categories }: {
               value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="btn-ghost flex-1">Cancelar</button>
+            <button type="button" onClick={onClose} className="flex-1 py-3 bg-white border-2 border-[#e8e5df] rounded-xl font-semibold text-[#5c5650] hover:bg-[#f5f3ef] hover:border-[#d4cfc5] transition-all shadow-sm">Cancelar</button>
             <button type="submit" disabled={saving}
               className={`flex-1 py-3 rounded-xl font-semibold text-white transition-all ${form.type === 'income' ? 'bg-[#4a7c65] hover:bg-[#3d6653]' : 'bg-[#e85d3f] hover:bg-[#d54426]'}`}>
               {saving ? 'Salvando...' : 'Salvar Transação'}

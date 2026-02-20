@@ -163,4 +163,52 @@ app.delete('/:id', async (c) => {
   }
 });
 
+// POST /batch — Agendamento em lote (pacotes de sessões)
+// Body: { patient_id, professional_id, start_time, end_time, duration, specialty, notes, dates: string[] }
+app.post('/batch', async (c) => {
+  const client = await pool.connect();
+  try {
+    const body = await c.req.json();
+    const {
+      patient_id, professional_id, start_time, end_time,
+      duration, specialty, notes, dates
+    } = body;
+
+    if (!Array.isArray(dates) || dates.length === 0) {
+      return c.json({ error: 'dates must be a non-empty array' }, 400);
+    }
+    if (!patient_id || !professional_id || !start_time || !end_time || !duration) {
+      return c.json({ error: 'patient_id, professional_id, start_time, end_time and duration are required' }, 400);
+    }
+
+    await client.query('BEGIN');
+
+    const created: any[] = [];
+    for (const date of dates) {
+      const result = await client.query(`
+        INSERT INTO appointments (
+          patient_id, professional_id, appointment_date, start_time,
+          end_time, duration, status, specialty, notes
+        ) VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', $7, $8)
+        RETURNING *
+      `, [patient_id, professional_id, date, start_time, end_time, duration, specialty, notes]);
+      created.push(result.rows[0]);
+    }
+
+    await client.query('COMMIT');
+
+    return c.json({
+      message: `${created.length} agendamentos criados com sucesso`,
+      count: created.length,
+      appointments: created
+    }, 201);
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    console.error('Error creating batch appointments:', error);
+    return c.json({ error: error.message }, 500);
+  } finally {
+    client.release();
+  }
+});
+
 export default app;
